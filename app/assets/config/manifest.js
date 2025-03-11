@@ -1,3 +1,11 @@
-//= link_tree ../images
-//= link_directory ../javascripts .js
-//= link_directory ../stylesheets .css//= link_tree ../builds
+//= link application.css
+//= link application.js
+//= link controllers/application.js
+//= link controllers/hello_controller.js
+//= link controllers/index.js
+//= link inter-font.css
+//= link tailwind.css
+//= link @hotwired--stimulus.js
+//= link stimulus-dropdown.js
+//= link hotkeys-js.js
+//= link stimulus-use.js
