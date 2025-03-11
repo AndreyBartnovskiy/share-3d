@@ -5,3 +5,7 @@
 //= link controllers/index.js
 //= link inter-font.css
 //= link tailwind.css
+//= link @hotwired--stimulus.js
+//= link stimulus-dropdown.js
+//= link hotkeys-js.js
+//= link stimulus-use.js
