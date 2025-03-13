@@ -9,3 +9,4 @@
 //= link stimulus-dropdown.js
 //= link hotkeys-js.js
 //= link stimulus-use.js
+//= link lib/flash.js
