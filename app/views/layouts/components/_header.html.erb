@@ -59,28 +59,24 @@
     const dropdownMenu = document.getElementById("nav-dropdown");
     const dropdownItems = dropdownMenu.querySelectorAll('.dropdown-item'); // Все элементы внутри меню
 
-    // Функция для переключения видимости дропдауна
     function toggleDropdown() {
       dropdownMenu.classList.toggle("hidden");
     }
 
-    // Открытие и закрытие при клике на кнопку
     dropdownButton.addEventListener("click", function(event) {
-      event.stopPropagation(); // Предотвращаем распространение события на окно
+      event.stopPropagation();
       toggleDropdown();
     });
 
-    // Закрытие меню при клике вне области дропдауна
     window.addEventListener("click", function(event) {
       if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
         dropdownMenu.classList.add("hidden");
       }
     });
 
-    // Остановка скрытия дропдауна при клике на один из пунктов
     dropdownItems.forEach(function(item) {
       item.addEventListener("click", function(event) {
-        event.stopPropagation(); // Чтобы клик по пункту не вызывал закрытие дропдауна
+        event.stopPropagation();
       });
     });
   });
