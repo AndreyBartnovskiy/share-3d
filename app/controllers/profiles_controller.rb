@@ -8,6 +8,8 @@ class ProfilesController < ApplicationController
     @profile = Profile.new(profile_params)
     if @profile.save
       current_user.profile = @profile
+      current_user.add_role :admin, @profile
+
       current_user.save
       redirect_to root_path, success: "Your profile has been created!"
     else
