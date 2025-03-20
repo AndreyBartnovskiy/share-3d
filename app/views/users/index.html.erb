@@ -1,4 +1,52 @@
-<div>
-  <h1 class="font-bold text-4xl">Users#index</h1>
-  <p>Find me in app/views/users/index.html.erb</p>
+<div class="flex p-5" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 md:space-x-3">
+    <li class="inline-flex items-center">
+      <h2 href="#" class="inline-flex items-center font-medium text-gray-700 hover:text-gray-900">
+        Пользователи
+      </h2>
+    </li>
+  </ol>
+</div>
+<div class="flex justify-center">
+  <div class="p-2 w-full bg-white rounded-lg border border-gray-200 shadow-md sm:p-6 lg:p-8">
+    <h5 class="text-xl font-bold leading-none text-gray-900"><%="Профили аккаунта #{current_profile.name}" %></h5>
+    <table class="w-full text-sm text-left text-gray-500">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-3">Name</th>
+          <th scope="col" class="px-6 py-3">E-mail</th>
+          <th scope="col" class="px-6 py-3">Статус</th>
+          <th scope="col" class="px-6 py-3">Роль</th>
+          <th scope="col" class="px-6 py-3">Добавлен</th>
+          <th scope="col" class="px-6 py-3"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr class="bg-white border-b">
+            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+              <%= user.name %>
+            </th>
+            <td class="px-6 py-4"><%= user.email %></td>
+            <td class="px-6 py-4">
+              <%= user.accepted_or_not_invited? ? "Active" : "Invited" %>
+            </td>
+            <td class="px-6 py-4">
+              <%= user.roles&.first&.name&.capitalize %>
+            </td>
+            <td class="px-6 py-4">
+              <%= user.created_at.strftime('%D') %>
+            </td>
+            <td class="px-6 py-4">
+              <%= link_to 'Управлять', edit_profile_user_path(user), class: 'text-blue-700 hover:text-white border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2' %>
+              <% unless user.id == current_user.id %>
+                <%= link_to 'Destroy', profile_user_path(user), { method: :delete, data: { confirm: 'Are you sure?' }, class: 'text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2' } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <%= link_to "Пригласить юзера", new_profile_user_path, class:"inline-flex mt-4 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center" %>
+  </div>
 </div>
