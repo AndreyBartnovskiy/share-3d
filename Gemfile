@@ -59,6 +59,7 @@ gem "devise"
 gem "devise_invitable"
 gem "rolify"
 gem "cancancan"
+gem "pry"
 
 gem "immutable-struct"
 gem "sidekiq"

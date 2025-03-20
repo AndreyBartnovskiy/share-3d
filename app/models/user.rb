@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   rolify
+  attr_accessor :role
   belongs_to :profile, optional: true
 
   # Include default devise modules. Others available are:
