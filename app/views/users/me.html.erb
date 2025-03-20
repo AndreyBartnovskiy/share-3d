@@ -1,0 +1,38 @@
+<div class="flex p-5" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 md:space-x-3">
+    <li class="inline-flex items-center">
+      <h2 href="#" class="inline-flex items-center font-medium text-gray-700 hover:text-gray-900">Пользователь</h2>
+    </li>
+    <li class="inline-flex items-center">
+      <h2 href="#" class="inline-flex items-center font-medium text-gray-700 hover:text-gray-900">
+        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+      </h2>
+    </li>
+  </ol>
+</div>
+<div class="flex justify-center">
+  <div class="p-2 w-full bg-white rounded-lg border border-gray-200 shadow-md sm:p-6 lg:p-8">
+    <h5 class="p-2 text-xl leading-none text-gray-900">Редактировать профиль:</h5>
+    <%= form_with(model: @user, url: update_my_settings_path, id: 'edit_my_user', html: {class: 'space-y-6'}) do |f| %>
+      <% if @user.errors.any? %>
+        <div class="text-red-700">
+          <h4>
+            <%="#{pluralize(@user.errors.count, "error")} prohibited this user from being saved:" %>
+          </h4>
+          <%== @user.errors.full_messages.map{|msg|content_tag(:li, msg)}.join %>
+        </div>
+      <% end %>
+      <div>
+        <%= f.label :name, class: 'block mb-2 text-sm font-medium text-gray-900' %>
+        <%= f.text_field :name, placeholder: 'Name', class: 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5' %>
+      </div>
+      <div>
+        <%= f.label :email, class: 'block mb-2 text-sm font-medium text-gray-900' %>
+        <%= f.email_field :email, placeholder: 'Enter their email address', class: 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5' %>
+      </div>
+      <%= f.submit "Обновить данные", class: "text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center" %>
+    <% end %>
+  </div>
+</div>
