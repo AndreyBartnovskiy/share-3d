@@ -1,0 +1,7 @@
+<h2><%= @model.name %></h2>
+<p><%= @model.description %></p>
+
+<p><strong>Файл:</strong> <%= link_to "Скачать", rails_blob_path(@model.file, disposition: "attachment") %></p>
+
+<!-- Контейнер для 3D-просмотра -->
+<div data-controller="viewer" data-viewer-url="<%= rails_blob_path(@model.file) %>" class="w-full h-[500px] border"></div>

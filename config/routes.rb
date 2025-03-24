@@ -18,6 +18,10 @@ Rails.application.routes.draw do
     resources :users
   end
 
+  resources :users do
+    resources :models
+  end
+
   get "activity/mine"
   get "activity/feed"
 
