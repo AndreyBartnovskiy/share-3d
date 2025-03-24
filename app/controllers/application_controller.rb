@@ -1,8 +1,8 @@
 class ApplicationController < ActionController::Base
   allow_browser versions: :modern
 
-  # protect_from_forgery with: :exception
-  # before_action :authenticate_user! аутентификация
+  protect_from_forgery with: :exception
+  before_action :authenticate_user! # сразу авторизация, страница входа
   layout :layout_by_resource
 
   helper_method :current_profile
@@ -11,6 +11,11 @@ class ApplicationController < ActionController::Base
     @current_profile ||= current_user.profile
     @current_profile
   end
+
+  rescue_from CanCan::AccessDenied do |exception|
+    redirect_to root_url, error: exception.message
+  end
+  add_flash_types :error
 
   protected
 
