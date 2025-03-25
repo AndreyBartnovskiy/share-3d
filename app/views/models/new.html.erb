@@ -1,0 +1,31 @@
+<%= form_with(model: [@user, @model], local: true, html: { multipart: true }) do |f| %>
+  <div>
+    <%= f.label :name, "Название модели" %>
+    <%= f.text_field :name %>
+  </div>
+
+  <div>
+    <%= f.label :description, "Описание модели" %>
+    <%= f.text_area :description %>
+  </div>
+
+  <div>
+    <%= f.label :file, "Файл модели" %>
+    <%= f.file_field :file %>
+  </div>
+
+  <% if @model.errors.any? %>
+    <div class="error_messages">
+      <h2>Ошибки:</h2>
+      <ul>
+        <% @model.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.submit "Загрузить модель" %>
+  </div>
+<% end %>
