@@ -19,7 +19,7 @@ class ModelsController < ApplicationController
 
   def show
     # if current_user.admin?
-      # @user = User.find(params[:user_id])  # Для администратора можно найти модель другого пользователя
+    # @user = User.find(params[:user_id])  # Для администратора можно найти модель другого пользователя
     # else
     @user = current_user
     # end
