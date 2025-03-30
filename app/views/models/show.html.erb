@@ -3,5 +3,10 @@
 
 <p><strong>Файл:</strong> <%= link_to "Скачать", rails_blob_path(@model.file, disposition: "attachment") %></p>
 
-<!-- Контейнер для 3D-просмотра -->
-<div data-controller="viewer" data-viewer-url="<%= rails_blob_path(@model.file) %>" class="w-full h-[500px] border"></div>
+<div id="three-container" data-obj-url="<%= rails_blob_url(@model.file) %>" style="width: 100%; height: 500px; position: relative;">
+  <!-- Здесь будет отрисована 3D-сцена -->
+</div>
+
+<% content_for :javascript do %>
+  <%= javascript_include_tag "lib/show_model", type: "module", "data-turbo-track": "reload" %>
+<% end %>
