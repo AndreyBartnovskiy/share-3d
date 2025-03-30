@@ -10,4 +10,4 @@
 //= link hotkeys-js.js
 //= link stimulus-use.js
 //= link lib/flash.js
-//= link lib/forms.js
+//= link lib/show_model.js

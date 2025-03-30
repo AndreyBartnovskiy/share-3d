@@ -3,4 +3,4 @@
 import "@hotwired/turbo-rails"
 import "controllers"
 import "lib/flash"
-import "lib/forms"
+import "lib/show_model"
