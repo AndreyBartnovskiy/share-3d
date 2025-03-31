@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { OBJLoader } from "./threejs/OBJLoader.js";
-import { OrbitControls } from "./threejs/OrbitControls.js";
+import { OBJLoader } from "OBJLoader";
+import { OrbitControls } from "OrbitControls";
 
 document.addEventListener("turbo:load", () => {
   const container = document.getElementById("three-container");

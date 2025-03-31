@@ -12,5 +12,3 @@
 //= link lib/flash.js
 //= link lib/show_model.js
 //= link lib/index_models.js
-//= link lib/threejs/OBJLoader.js
-//= link lib/threejs/OrbitControls.js
