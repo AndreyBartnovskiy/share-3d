@@ -17,5 +17,5 @@
 </div>
 
 <% content_for :javascript do %>
-  <%= javascript_include_tag "lib/index_models", type: "module", "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "lib/index_models", type: "module", defer: true %>
 <% end %>
