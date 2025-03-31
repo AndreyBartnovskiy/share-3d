@@ -50,6 +50,8 @@ document.addEventListener("turbo:load", () => {
     }
   );
 
+
+
   function animate() {
     requestAnimationFrame(animate);
     controls.update();
