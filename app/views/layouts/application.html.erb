@@ -7,16 +7,6 @@
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.min.js",
-        "OBJLoader": "https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/loaders/OBJLoader.js",
-        "OrbitControls": "https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/controls/OrbitControls.js"
-      }
-    }
-  </script>
-
   <%= stylesheet_link_tag "tailwind", "inter-font", "data-turbo-track": "reload" %>
   <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
 
@@ -41,6 +31,5 @@
       <%= render partial: 'layouts/components/footer' %>
     </div>
   </div>
-
 </body>
 </html>
