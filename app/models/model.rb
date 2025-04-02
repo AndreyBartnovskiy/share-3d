@@ -14,7 +14,7 @@ class Model < ApplicationRecord
     return if file.blank?
 
     # Расширения, которые разрешаем для 3D моделей
-    allowed_extensions = [ ".glb", ".gltf", ".obj", ".fbx" ]
+    allowed_extensions = [ ".glb", ".gltf", ".obj", ".zip" ]
 
     # Получаем расширение файла
     extension = File.extname(file.filename.to_s).downcase
