@@ -68,11 +68,14 @@
     </a>
 
     <div class="viewer-container">
-      <babylon-viewer 
-        source="<%= rails_blob_url(@model.file) %>" 
+      <babylon-viewer
+        source="<%= rails_blob_url(@model.file) %>"
+        environment="auto"
+        camera-auto-orbit
+        camera-auto-orbit-speed="0.080"
         skybox="https://assets.babylonjs.com/environments/environmentSpecular.env">
       </babylon-viewer>
-    </div>    
+    </div>
   </div>
 </body>
 </html>
