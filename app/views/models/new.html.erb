@@ -66,10 +66,6 @@
         </div>
       </div>
     </div>
-    <div class="mb-4">
-      <!-- Список выбранных файлов -->
-      <ul id="gltf-list" class="list-disc list-inside text-gray-700"></ul>
-    </div>
     <div id="gltf-download" class="mb-4">
       <button id="gltf-download-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded" disabled>Конвертировать файлы</button>
       <a id="gltf-download-link" class="hidden"></a>
@@ -118,7 +114,6 @@
   function handleGltfFileSelect(event) {
     event.stopPropagation();
     event.preventDefault();
-    document.getElementById('gltf-list').innerHTML = "";
     addDownloadButton();
     var items = event.dataTransfer.items;
     remainingfilestoprocess = items.length;
@@ -140,10 +135,6 @@
     if (item.isFile) {
       item.file(function(file) {
         files.push(file);
-        var fileitem = '<li><strong>' + escape(file.name) + '</strong> (' + file.type + ') - ' +
-          file.size + ' bytes, last modified: ' + file.lastModifiedDate + '</li>';
-        document.getElementById('gltf-list').innerHTML += fileitem;
-
         var extension = file.name.split('.').pop().toLowerCase();
         if (extension === "gltf") {
           glbfilename = file.name.substring(0, file.name.lastIndexOf('.'));
