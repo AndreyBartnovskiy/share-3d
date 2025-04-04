@@ -14,14 +14,14 @@ class Model < ApplicationRecord
     return if file.blank?
 
     # Расширения, которые разрешаем для 3D моделей
-    allowed_extensions = [ ".glb", ".gltf", ".obj", ".zip" ]
+    allowed_extensions = [ ".glb", ".obj" ]
 
     # Получаем расширение файла
     extension = File.extname(file.filename.to_s).downcase
 
     # Проверяем, что расширение файла разрешено
     unless allowed_extensions.include?(extension)
-      errors.add(:file, "должен быть в одном из форматов: .glb, .gltf, .obj, .fbx")
+      errors.add(:file, "должен быть в одном из форматов: .glb(gltf), .obj")
     end
   end
 end
