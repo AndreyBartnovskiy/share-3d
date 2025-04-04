@@ -1,31 +1,52 @@
-<%= form_with(model: [@user, @model], local: true, html: { multipart: true }) do |f| %>
-  <div>
-    <%= f.label :name, "Название модели" %>
-    <%= f.text_field :name %>
-  </div>
+<div class="max-w-xl mx-auto mt-10">
+  <div class="bg-white shadow-md rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">Загрузить модель</h2>
+    <%= form_with(model: [@user, @model], local: true, html: { multipart: true }) do |f| %>
+      <div class="mb-4">
+        <%= f.label :name, "Название модели", class: "block text-gray-700 font-medium mb-2" %>
+        <%= f.text_field :name, class: "w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400" %>
+      </div>
 
-  <div>
-    <%= f.label :description, "Описание модели" %>
-    <%= f.text_area :description %>
-  </div>
+      <div class="mb-4">
+        <%= f.label :description, "Описание модели", class: "block text-gray-700 font-medium mb-2" %>
+        <%= f.text_area :description, rows: 4, class: "w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400" %>
+      </div>
 
-  <div>
-    <%= f.label :file, "Файл модели" %>
-    <%= f.file_field :file %>
-  </div>
+      <div class="mb-4" data-controller="upload">
+        <%= f.label :file, "Файл модели", class: "block text-gray-700 font-medium mb-2" %>
+      
+        <div 
+          class="flex items-center justify-center w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition"
+          data-upload-target="dropzone"
+          data-action="dragover->upload#handleDragOver dragleave->upload#handleDragLeave drop->upload#handleDrop click->upload#browse">
+          <div class="text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4a1 1 0 011-1h8a1 1 0 011 1v12m-9 4h10a1 1 0 001-1v-4a1 1 0 00-1-1h-2.586a1 1 0 01-.707-.293l-1.414-1.414a1 1 0 00-.707-.293H10a1 1 0 00-1 1v6z" />
+            </svg>
+            <p class="mt-2 text-sm">Перетащите файл сюда или <span class="underline text-blue-600">нажмите для выбора</span></p>
+            <p class="mt-1 text-xs text-gray-400" data-upload-target="filename">Файл не выбран</p>
+          </div>
+        </div>
+      
+        <%= f.file_field :file, class: "hidden", data: { upload_target: "input" } %>
+      </div>
+      
 
-  <% if @model.errors.any? %>
-    <div class="error_messages">
-      <h2>Ошибки:</h2>
-      <ul>
-        <% @model.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
+      <% if @model.errors.any? %>
+        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <h3 class="font-bold mb-2">Ошибки:</h3>
+          <ul class="list-disc list-inside">
+            <% @model.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
 
-  <div>
-    <%= f.submit "Загрузить модель" %>
+      <div class="text-right">
+        <%= f.submit "Загрузить модель", class: "bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded" %>
+      </div>
+    <% end %>
   </div>
-<% end %>
+</div>
+
