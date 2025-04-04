@@ -297,14 +297,19 @@
     var fileBlob = new Blob([finalBuffer], { type: 'model/json-binary' });
     var glbFile = new File([fileBlob], glbfilename + ".glb", { type: 'model/json-binary' });
   
-    // Ссылка для скачивания
+    // Обновляем атрибуты ссылки для скачивания
     var a = document.getElementById("gltf-download-link");
     a.href = URL.createObjectURL(fileBlob);
     a.download = glbFile.name;
+
+    // Обновляем кнопку скачивания: делаем её активной и назначаем обработчик клика,
+    // который инициирует скачивание файла
     var btn = document.getElementById("gltf-download-btn");
     btn.disabled = false;
     btn.textContent = "Download .glb";
-    a.click();
+    btn.onclick = function() {
+      a.click();
+    };
   
     // Передаём .glb файл в форму загрузки:
     var dataTransfer = new DataTransfer();
