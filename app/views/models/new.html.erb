@@ -52,9 +52,14 @@
 <!-- Конвертер glTF -> GLB -->
 <div class="max-w-xl mx-auto mt-10">
   <div class="bg-white shadow-md rounded-lg p-6">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">GLTF to GLB Converter</h2>
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">GLTF to GLB Converter</h2>
+    <p class="text-gray-600 text-sm mb-6">
+      Чтобы загрузить вашу <span class="font-medium">.gltf</span> модель со всеми настройками, которые содержатся в ваших ассетах, пожалуйста, воспользуйтесь конвертером ниже:
+      просто поместите папку с содержимым, и он передаст в загрузчик готовый сконвертированный <span class="font-medium">.glb</span> файл.
+      При желании вы можете загрузить его вручную после конвертации.
+    </p>
+    
     <div class="mb-4">
-      <!-- Стилизованная зона drag & drop -->
       <div 
         id="gltf-drop-zone"
         class="flex items-center justify-center w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition">
@@ -66,8 +71,9 @@
         </div>
       </div>
     </div>
-    <div id="gltf-download" class="mb-4">
-      <button id="gltf-download-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded" disabled>Конвертировать файлы</button>
+
+    <div id="gltf-download" class="mb-2 hidden">
+      <button id="gltf-download-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">Загрузить .glb модель</button>
       <a id="gltf-download-link" class="hidden"></a>
     </div>
   </div>
@@ -101,9 +107,11 @@
   });
 
   function addDownloadButton() {
-    var btn = document.getElementById("gltf-download-btn");
+    const downloadWrapper = document.getElementById("gltf-download");
+    const btn = document.getElementById("gltf-download-btn");
+    btn.textContent = "Обработка...";
     btn.disabled = true;
-    btn.textContent = "Processing...";
+    downloadWrapper.classList.remove("hidden");
     btn.onclick = startDownload;
   }
 
@@ -324,6 +332,9 @@
     if (filenameDisplay) {
       filenameDisplay.textContent = glbFile.name;
     }
+
+    btn.disabled = false;
+    btn.textContent = "Загрузить .glb модель";
   }
 
   function isBase64(uri) {
