@@ -31,7 +31,6 @@
         <%= f.file_field :file, class: "hidden", data: { upload_target: "input" } %>
       </div>
       
-
       <% if @model.errors.any? %>
         <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           <h3 class="font-bold mb-2">Ошибки:</h3>
@@ -49,3 +48,362 @@
     <% end %>
   </div>
 </div>
+
+<div class="max-w-xl mx-auto mt-10">
+  <div class="bg-white shadow-md rounded-lg p-6">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-gray-800 mb-3">Конвертер GLTF в GLB</h2>
+      <div class="bg-blue-50 rounded-lg p-4 space-y-3">
+        <div class="flex items-start space-x-2">
+          <svg class="w-5 h-5 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-gray-700 leading-relaxed">
+            Для корректной конвертации <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded font-medium">.gltf</span> модели 
+            с текстурами и материалами:
+          </p>
+        </div>
+        <ul class="space-y-3 pl-6"> <!-- Уменьшили padding-left -->
+          <li class="relative text-gray-600 leading-normal">
+            <div class="absolute -left-3 top-2 w-1.5 h-1.5 bg-blue-400 rounded-full"></div> <!-- Добавили negative left -->
+            Перетащите <span class="font-medium">всю папку</span> с ассетами в область ниже
+          </li>
+          <li class="relative text-gray-600 leading-normal">
+            <div class="absolute -left-3 top-2 w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+            Система автоматически соберёт все зависимости
+          </li>
+          <li class="relative text-gray-600 leading-normal">
+            <div class="absolute -left-3 top-2 w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+            Готовый <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded font-medium">.glb</span> файл будет доступен для загрузки
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Остальная часть конвертера без изменений -->
+    <div class="mb-4">
+      <div 
+        id="gltf-drop-zone"
+        class="flex items-center justify-center w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition group">
+        <div class="text-gray-500">
+          <svg class="mx-auto h-12 w-12 text-gray-400 group-hover:text-blue-500 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4a1 1 0 011-1h8a1 1 0 011 1v12m-9 4h10a1 1 0 001-1v-4a1 1 0 00-1-1h-2.586a1 1 0 01-.707-.293l-1.414-1.414a1 1 0 00-.707-.293H10a1 1 0 00-1 1v6z" />
+          </svg>
+          <p class="mt-2 text-sm text-gray-600 group-hover:text-gray-800 transition">Перетащите сюда папку с моделью</p>
+          <p class="text-xs text-gray-400 mt-1">Поддерживаются: .gltf, .bin, текстуры</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="gltf-download" class="mb-2 hidden">
+      <button id="gltf-download-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-transform transform hover:scale-[1.02]"></button>
+      <a id="gltf-download-link" class="hidden"></a>
+    </div>
+  </div>
+</div>
+
+<!-- Скрипт конвертера glTF -> GLB -->
+<script>
+  // Глобальные переменные для конвертера
+  var files = [];
+  var fileblobs = [];
+  var gltf;
+  var remainingfilestoprocess = 0;
+  var glbfilename;
+
+  var outputBuffers;
+  var bufferMap;
+  var bufferOffset;
+
+  // Обработчик dragover для зоны конвертера
+  function handleGltfDragOver(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+  }
+
+  var dropZone = document.getElementById('gltf-drop-zone');
+  dropZone.addEventListener('dragover', handleGltfDragOver, false);
+  dropZone.addEventListener('drop', handleGltfFileSelect, false);
+  dropZone.addEventListener('click', function() {
+    // Для удобства можно добавить стандартный input[type=file] (не показан здесь)
+  });
+
+  function addDownloadButton() {
+    const downloadWrapper = document.getElementById("gltf-download");
+    const btn = document.getElementById("gltf-download-btn");
+    btn.textContent = "Обработка...";
+    btn.disabled = true;
+    downloadWrapper.classList.remove("hidden");
+    btn.onclick = startDownload;
+  }
+
+  function startDownload() {
+    document.getElementById("gltf-download-link").click();
+  }
+
+  function handleGltfFileSelect(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    addDownloadButton();
+    var items = event.dataTransfer.items;
+    remainingfilestoprocess = items.length;
+    for (var i = 0; i < items.length; i++) {
+      var entry;
+      if (items[i].getAsEntry) {
+        entry = items[i].getAsEntry();
+      } else if (items[i].webkitGetAsEntry) {
+        entry = items[i].webkitGetAsEntry();
+      }
+      if (entry) {
+        traverseFileTree(entry);
+      }
+    }
+  }
+
+  function traverseFileTree(item, path) {
+    path = path || "";
+    if (item.isFile) {
+      item.file(function(file) {
+        files.push(file);
+        var extension = file.name.split('.').pop().toLowerCase();
+        if (extension === "gltf") {
+          glbfilename = file.name.substring(0, file.name.lastIndexOf('.'));
+          var reader = new FileReader();
+          reader.readAsText(file);
+          reader.onload = function(event) {
+            gltf = JSON.parse(event.target.result);
+            checkRemaining();
+          };
+        } else {
+          var reader = new FileReader();
+          reader.onload = (function(theFile) {
+            return function(e) {
+              fileblobs[theFile.name.toLowerCase()] = (e.target.result);
+              checkRemaining();
+            };
+          })(file);
+          reader.readAsArrayBuffer(file);
+        }
+      }, function(error) {
+        console.log(error);
+      });
+    } else if (item.isDirectory) {
+      var dirReader = item.createReader();
+      dirReader.readEntries(function(entries) {
+        remainingfilestoprocess += entries.length;
+        checkRemaining();
+        for (var i = 0; i < entries.length; i++) {
+          traverseFileTree(entries[i], path + item.name + "/");
+        }
+      });
+    }
+  }
+
+  function checkRemaining() {
+    remainingfilestoprocess--;
+    if (remainingfilestoprocess === 0) {
+      outputBuffers = [];
+      bufferMap = new Map();
+      bufferOffset = 0;
+      processBuffers().then(fileSave);
+    }
+  }
+
+  function processBuffers() {
+    var pendingBuffers = gltf.buffers.map(function(buffer, bufferIndex) {
+      return dataFromUri(buffer).then(function(data) {
+        if (data !== undefined) {
+          outputBuffers.push(data);
+        }
+        delete buffer.uri;
+        buffer.byteLength = data.byteLength;
+        bufferMap.set(bufferIndex, bufferOffset);
+        bufferOffset += alignedLength(data.byteLength);
+      });
+    });
+
+    return Promise.all(pendingBuffers).then(function() {
+      var bufferIndex = gltf.buffers.length;
+      var images = gltf.images || [];
+      var pendingImages = images.map(function(image) {
+        return dataFromUri(image).then(function(data) {
+          if (data === undefined) {
+            delete image['uri'];
+            return;
+          }
+          var bufferView = {
+            buffer: 0,
+            byteOffset: bufferOffset,
+            byteLength: data.byteLength,
+          };
+          bufferMap.set(bufferIndex, bufferOffset);
+          bufferIndex++;
+          bufferOffset += alignedLength(data.byteLength);
+          var bufferViewIndex = gltf.bufferViews.length;
+          gltf.bufferViews.push(bufferView);
+          outputBuffers.push(data);
+          image['bufferView'] = bufferViewIndex;
+          image['mimeType'] = getMimeType(image.uri);
+          delete image['uri'];
+        });
+      });
+      return Promise.all(pendingImages);
+    });
+  }
+
+  function fileSave() {
+    var Binary = {
+      Magic: 0x46546C67
+    };
+  
+    for (var i = 0, len = gltf.bufferViews.length; i < len; i++) {
+      var bufferView = gltf.bufferViews[i];
+      if (bufferView.byteOffset === undefined) {
+        bufferView.byteOffset = 0;
+      } else {
+        bufferView.byteOffset = bufferView.byteOffset + bufferMap.get(bufferView.buffer);
+      }
+      bufferView.buffer = 0;
+    }
+    var binBufferSize = bufferOffset;
+    gltf.buffers = [{
+      byteLength: binBufferSize
+    }];
+  
+    var enc = new TextEncoder();
+    var jsonBuffer = enc.encode(JSON.stringify(gltf));
+    var jsonAlignedLength = alignedLength(jsonBuffer.length);
+    var padding;
+    if (jsonAlignedLength !== jsonBuffer.length) {
+      padding = jsonAlignedLength - jsonBuffer.length;
+    }
+    var totalSize = 12 + // file header: magic + version + length
+      8 + // json chunk header: json length + type
+      jsonAlignedLength +
+      8 + // bin chunk header: chunk length + type
+      binBufferSize;
+    var finalBuffer = new ArrayBuffer(totalSize);
+    var dataView = new DataView(finalBuffer);
+    var bufIndex = 0;
+    dataView.setUint32(bufIndex, Binary.Magic, true);
+    bufIndex += 4;
+    dataView.setUint32(bufIndex, 2, true);
+    bufIndex += 4;
+    dataView.setUint32(bufIndex, totalSize, true);
+    bufIndex += 4;
+    // JSON
+    dataView.setUint32(bufIndex, jsonAlignedLength, true);
+    bufIndex += 4;
+    dataView.setUint32(bufIndex, 0x4E4F534A, true);
+    bufIndex += 4;
+  
+    for (var j = 0; j < jsonBuffer.length; j++) {
+      dataView.setUint8(bufIndex, jsonBuffer[j]);
+      bufIndex++;
+    }
+    if (padding !== undefined) {
+      for (var j = 0; j < padding; j++) {
+        dataView.setUint8(bufIndex, 0x20);
+        bufIndex++;
+      }
+    }
+  
+    // BIN
+    dataView.setUint32(bufIndex, binBufferSize, true);
+    bufIndex += 4;
+    dataView.setUint32(bufIndex, 0x004E4942, true);
+    bufIndex += 4;
+    for (var i = 0; i < outputBuffers.length; i++) {
+      var bufoffset = bufIndex + bufferMap.get(i);
+      var buf = new Uint8Array(outputBuffers[i]);
+      var thisbufindex = bufoffset;
+      for (var j = 0; j < buf.byteLength; j++) {
+        dataView.setUint8(thisbufindex, buf[j]);
+        thisbufindex++;
+      }
+    }
+  
+    // Создаём Blob и File
+    var fileBlob = new Blob([finalBuffer], { type: 'model/json-binary' });
+    var glbFile = new File([fileBlob], glbfilename + ".glb", { type: 'model/json-binary' });
+  
+    // Обновляем атрибуты ссылки для скачивания
+    var a = document.getElementById("gltf-download-link");
+    a.href = URL.createObjectURL(fileBlob);
+    a.download = glbFile.name;
+
+    // Обновляем кнопку скачивания: делаем её активной и назначаем обработчик клика,
+    // который инициирует скачивание файла
+    var btn = document.getElementById("gltf-download-btn");
+    btn.disabled = false;
+    btn.textContent = "Download .glb";
+    btn.onclick = function() {
+      a.click();
+    };
+  
+    // Передаём .glb файл в форму загрузки:
+    var dataTransfer = new DataTransfer();
+    dataTransfer.items.add(glbFile);
+    // Обратите внимание на корректный селектор с data-upload-target
+    var fileInput = document.querySelector('input[type="file"][data-upload-target="input"]');
+    if (fileInput) {
+      fileInput.files = dataTransfer.files;
+    }
+    // Обновляем отображение имени файла
+    var filenameDisplay = document.querySelector('[data-upload-target="filename"]');
+    if (filenameDisplay) {
+      filenameDisplay.textContent = glbFile.name;
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Скачать .glb файл";
+  }
+
+  function isBase64(uri) {
+    return uri.length < 5 ? false : uri.substr(0, 5) === "data:";
+  }
+  function decodeBase64(uri) {
+    return fetch(uri).then(function(response) { return response.arrayBuffer(); });
+  }
+  function dataFromUri(buffer) {
+    if (buffer.uri === undefined) {
+      return Promise.resolve(undefined);
+    } else if (isBase64(buffer.uri)) {
+      return decodeBase64(buffer.uri);
+    } else {
+      var filename = buffer.uri.substr(buffer.uri.lastIndexOf('/') + 1);
+      return Promise.resolve(fileblobs[filename.toLowerCase()]);
+    }
+  }
+  function alignedLength(value) {
+    var alignValue = 4;
+    if (value == 0) {
+      return value;
+    }
+    var multiple = value % alignValue;
+    if (multiple === 0) {
+      return value;
+    }
+    return value + (alignValue - multiple);
+  }
+
+  function getMimeType(filename) {
+    for (var mimeType in gltfMimeTypes) {
+      for (var extensionIndex in gltfMimeTypes[mimeType]) {
+        var extension = gltfMimeTypes[mimeType][extensionIndex];
+        if (filename.toLowerCase().endsWith('.' + extension)) {
+          return mimeType;
+        }
+      }
+    }
+    return 'application/octet-stream';
+  }
+
+  var gltfMimeTypes = {
+    'image/png': ['png'],
+    'image/jpeg': ['jpg', 'jpeg'],
+    'text/plain': ['glsl', 'vert', 'vs', 'frag', 'fs', 'txt'],
+    'image/vnd-ms.dds': ['dds']
+  };
+</script>
