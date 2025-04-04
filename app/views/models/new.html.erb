@@ -225,7 +225,7 @@
     var Binary = {
       Magic: 0x46546C67
     };
-
+  
     for (var i = 0, len = gltf.bufferViews.length; i < len; i++) {
       var bufferView = gltf.bufferViews[i];
       if (bufferView.byteOffset === undefined) {
@@ -239,7 +239,7 @@
     gltf.buffers = [{
       byteLength: binBufferSize
     }];
-
+  
     var enc = new TextEncoder();
     var jsonBuffer = enc.encode(JSON.stringify(gltf));
     var jsonAlignedLength = alignedLength(jsonBuffer.length);
@@ -266,7 +266,7 @@
     bufIndex += 4;
     dataView.setUint32(bufIndex, 0x4E4F534A, true);
     bufIndex += 4;
-
+  
     for (var j = 0; j < jsonBuffer.length; j++) {
       dataView.setUint8(bufIndex, jsonBuffer[j]);
       bufIndex++;
@@ -277,7 +277,7 @@
         bufIndex++;
       }
     }
-
+  
     // BIN
     dataView.setUint32(bufIndex, binBufferSize, true);
     bufIndex += 4;
@@ -292,14 +292,33 @@
         thisbufindex++;
       }
     }
+  
+    // Создаём Blob и File
+    var fileBlob = new Blob([finalBuffer], { type: 'model/json-binary' });
+    var glbFile = new File([fileBlob], glbfilename + ".glb", { type: 'model/json-binary' });
+  
+    // Ссылка для скачивания
     var a = document.getElementById("gltf-download-link");
-    var file = new Blob([finalBuffer], { type: 'model/json-binary' });
-    a.href = URL.createObjectURL(file);
-    a.download = glbfilename + ".glb";
+    a.href = URL.createObjectURL(fileBlob);
+    a.download = glbFile.name;
     var btn = document.getElementById("gltf-download-btn");
     btn.disabled = false;
     btn.textContent = "Download .glb";
     a.click();
+  
+    // Передаём .glb файл в форму загрузки:
+    var dataTransfer = new DataTransfer();
+    dataTransfer.items.add(glbFile);
+    // Обратите внимание на корректный селектор с data-upload-target
+    var fileInput = document.querySelector('input[type="file"][data-upload-target="input"]');
+    if (fileInput) {
+      fileInput.files = dataTransfer.files;
+    }
+    // Обновляем отображение имени файла
+    var filenameDisplay = document.querySelector('[data-upload-target="filename"]');
+    if (filenameDisplay) {
+      filenameDisplay.textContent = glbFile.name;
+    }
   }
 
   function isBase64(uri) {
