@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Галерея 3D моделей</title>
+  <style>
+    /* Общие стили страницы */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #f4f4f4;
+      color: #333;
+    }
+    .gallery-container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 40px;
+    }
+    /* Сетка карточек моделей: 2 ряда, горизонтальная прокрутка */
+    .model-grid {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(2, auto);
+      grid-auto-columns: minmax(250px, 1fr);
+      grid-gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 20px;
+    }
+    /* Карточка модели */
+    .model-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .model-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .model-card a {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      height: 100%;
+    }
+    /* Блок превью карточки */
+    .model-thumb {
+      width: 100%;
+      height: 180px;
+      background-color: #eee;
+      background-size: cover;
+      background-position: center;
+    }
+    /* Заглушка, если файл отсутствует */
+    .no-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #ddd;
+      width: 100%;
+      height: 180px;
+      font-size: 16px;
+      color: #555;
+    }
+    /* Информация по модели */
+    .model-info {
+      padding: 15px;
+    }
+    .model-info h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+    .model-info p {
+      margin: 0;
+      font-size: 14px;
+      color: #666;
+    }
+    .model-info .ids {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #999;
+    }
+  </style>
+  <!-- Подключаем Babylon Viewer -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@babylonjs/viewer@7.52.1/dist/babylon-viewer.esm.min.js"></script>
+</head>
+<body>
+  <div class="gallery-container">
+    <h1>Галерея 3D моделей</h1>
+    <div class="model-grid">
+      <% @models.each do |model| %>
+        <div class="model-card">
+          <a href="<%= user_model_path(model.user, model) %>">
+            <% if model.file.attached? %>
+              <div class="model-thumb">
+                <babylon-viewer source="<%= rails_blob_url(model.file) %>"</babylon-viewer>
+              </div>
+            <% else %>
+              <div class="no-preview">
+                Нет превью
+              </div>
+            <% end %>
+            <div class="model-info">
+              <h3><%= model.name %></h3>
+              <p><%= truncate(model.description, length: 100) %></p>
+              <div class="ids">
+                ID модели: <%= model.id %><br>
+                Пользователь: <%= model.user.name %>
+              </div>
+            </div>
+          </a>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</body>
+</html>

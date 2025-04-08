@@ -1,13 +1,16 @@
 class ModelsController < ApplicationController
+  before_action :set_user, only: [ :index, :new, :create, :show ]
+  before_action :set_models, only: [ :index ]
   before_action :authenticate_user!
 
+  def index
+  end
+
   def new
-    @user = current_user
     @model = @user.models.new
   end
 
   def create
-    @user = current_user
     @model = @user.models.new(model_params)
 
     if @model.save
@@ -18,25 +21,26 @@ class ModelsController < ApplicationController
   end
 
   def show
-    # if current_user.admin?
-    # @user = User.find(params[:user_id])  # Для администратора можно найти модель другого пользователя
-    # else
-    @user = current_user
-    # end
     @model = @user.models.find(params[:id])
 
-    # можно закомментить
     if @model.nil?
       redirect_to user_models_path(@user), alert: "Модель не найдена!"
     end
   end
-  # Если ты планируешь, чтобы администратор мог просматривать модели других пользователей, то вместо @user = current_user ты должен добавить проверку роли администратора.
 
   def embed
     @model = Model.find(params[:id])
   end
 
   private
+
+  def set_user
+    @user = current_user
+  end
+
+  def set_models
+    @models = current_user.models
+  end
 
   def model_params
     params.require(:model).permit(:name, :description, :file, :tags)
