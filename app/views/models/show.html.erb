@@ -119,9 +119,8 @@
 
   <script>
     document.getElementById("embedBtn").addEventListener("click", function() {
-      // Формируем URL для embed страницы. Важно: используем embed_user_model_path(@model.user, @model)
-      // Если у вас нет @model.user, можно использовать current_user или изменить логику маршрута
-      var embedUrl = "<%= url_for(embed_user_model_path(@model.user, @model)) %>";
+          // Используем новый маршрут embed_model_path(@model)
+      var embedUrl = "<%= url_for(embed_model_path(@model)) %>";
       var embedHTML = `<div class="sketchfab-embed-wrapper">
   <iframe title="<%= @model.name %>" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"
     src="${embedUrl}">

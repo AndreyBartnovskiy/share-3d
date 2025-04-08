@@ -19,10 +19,12 @@ Rails.application.routes.draw do
   end
 
   resources :users do
-    resources :models do
-      member do
-        get :embed
-      end
+    resources :models
+  end
+
+  resources :models, only: [] do
+    member do
+      get :embed
     end
   end
 
