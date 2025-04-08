@@ -23,11 +23,15 @@
       font-size: 36px;
       margin-bottom: 40px;
     }
-    /* Сетка карточек моделей */
+    /* Сетка карточек моделей: 2 ряда, горизонтальная прокрутка */
     .model-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-auto-flow: column;
+      grid-template-rows: repeat(2, auto);
+      grid-auto-columns: minmax(250px, 1fr);
       grid-gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 20px;
     }
     /* Карточка модели */
     .model-card {
@@ -80,7 +84,7 @@
             <% if model.respond_to?(:preview_image) && model.preview_image.attached? %>
               <div class="model-thumb" style="background-image: url('<%= rails_blob_url(model.preview_image) %>');"></div>
             <% else %>
-              <!-- Заглушка, если превью не прикреплено -->
+              <!-- Если превью не прикреплено, показываем заглушку -->
               <div class="model-thumb"></div>
             <% end %>
             <div class="model-info">
