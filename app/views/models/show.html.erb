@@ -20,7 +20,7 @@
     .model-container {
       background: #fff;
       max-width: 800px;
-      margin: 20px auto;
+      margin: 80px auto; /* увеличенный верхний отступ */
       padding: 20px;
       box-sizing: border-box;
     }
@@ -183,7 +183,7 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      z-index: 10; /* добавлено для явного отображения */
+      z-index: 10;
       cursor: pointer;
       background: transparent;
       border: none;
@@ -195,9 +195,9 @@
 </head>
 <body>
   <div class="model-container">
-    <h2 class="model-title"><%= @model.name %></h2>
+    <h2 class="model-title">Модель: <%= @model.name %></h2>
     <div class="model-description">
-      <p><%= @model.description %></p>
+      <p>Описание: <%= @model.description %></p>
     </div>
 
     <div class="viewer-container">
