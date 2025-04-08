@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title><%= @model.name %> - 3D Viewer</title>
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="<%= @model.name %>" />
+  <meta property="og:description" content="<%= @model.description %>" />
+  <!-- Если у вас есть логотип или превью изображение модели -->
+  <meta property="og:image" content="<%= url_for(@model.preview_image) if @model.respond_to?(:preview_image) && @model.preview_image.attached? %>" />
+  <meta property="og:url" content="<%= request.original_url %>" />
+  <meta property="og:type" content="website" />
+
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@babylonjs/viewer@7.52.1/dist/babylon-viewer.esm.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    babylon-viewer { width: 100vw; height: 100vh; display: block; }
+  </style>
+</head>
+<body>
+  <babylon-viewer
+    source="<%= rails_blob_url(@model.file) %>"
+    environment="auto"
+    camera-auto-orbit
+    camera-auto-orbit-speed="0.080"
+    skybox="https://assets.babylonjs.com/environments/environmentSpecular.env">
+  </babylon-viewer>
+</body>
+</html>

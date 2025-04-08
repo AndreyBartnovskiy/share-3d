@@ -22,6 +22,12 @@ Rails.application.routes.draw do
     resources :models
   end
 
+  resources :models, only: [] do
+    member do
+      get :embed
+    end
+  end
+
   get "activity/mine"
   get "activity/feed"
 

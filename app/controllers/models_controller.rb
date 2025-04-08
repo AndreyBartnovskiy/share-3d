@@ -32,6 +32,10 @@ class ModelsController < ApplicationController
   end
   # Если ты планируешь, чтобы администратор мог просматривать модели других пользователей, то вместо @user = current_user ты должен добавить проверку роли администратора.
 
+  def embed
+    @model = Model.find(params[:id])
+  end
+
   private
 
   def model_params
