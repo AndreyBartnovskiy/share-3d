@@ -18,19 +18,16 @@
       max-width: 800px;
       margin: 20px auto;
     }
-
     .model-header {
       font-size: 24px;
       font-weight: bold;
       margin-bottom: 10px;
     }
-
     .model-description {
       font-size: 16px;
       color: #333;
       margin-bottom: 15px;
     }
-
     .download-link {
       display: inline-block;
       background: #007bff;
@@ -41,31 +38,61 @@
       font-weight: bold;
       transition: 0.3s;
     }
-
     .download-link:hover {
       background: #0056b3;
     }
-
     .viewer-container {
       width: 100%;
       height: 500px;
       margin-top: 15px;
     }
-
     babylon-viewer {
       width: 100%;
       height: 100%;
     }
+    /* Стили для модального окна embed */
+    #embedModal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 5px;
+      padding: 20px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+    #embedModal textarea {
+      width: 100%;
+      height: 150px;
+      font-family: monospace;
+    }
+    #embedModal button {
+      margin-top: 10px;
+    }
+    #embedOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+      display: none;
+    }
   </style>
 </head>
 <body>
-
   <div class="model-container">
     <div class="model-header"><%= @model.name %></div>
     <p class="model-description"><%= @model.description %></p>
-    <a class="download-link" href="<%= rails_blob_path(@model.file, disposition: 'attachment') %>">
-      📥 Скачать модель
-    </a>
+    <% if @model.file.attached? %>
+      <a class="download-link" href="<%= rails_blob_path(@model.file, disposition: 'attachment') %>">
+        📥 Скачать модель
+      </a>
+    <% else %>
+      <p>Файл модели не загружен</p>
+    <% end %>
 
     <div class="viewer-container">
       <babylon-viewer
@@ -76,6 +103,42 @@
         skybox="https://assets.babylonjs.com/environments/environmentSpecular.env">
       </babylon-viewer>
     </div>
+
+    <!-- Кнопка Embed -->
+    <button id="embedBtn">Embed</button>
   </div>
+
+  <!-- Overlay и модальное окно для Embed-кода -->
+  <div id="embedOverlay"></div>
+  <div id="embedModal" style="display: none;">
+    <h3>Embed Code</h3>
+    <textarea id="embedCode" readonly></textarea>
+    <br>
+    <button id="closeEmbed">Закрыть</button>
+  </div>
+
+  <script>
+    document.getElementById("embedBtn").addEventListener("click", function() {
+      // Формируем URL для embed страницы. Важно: используем embed_user_model_path(@model.user, @model)
+      // Если у вас нет @model.user, можно использовать current_user или изменить логику маршрута
+      var embedUrl = "<%= url_for(embed_user_model_path(@model.user, @model)) %>";
+      var embedHTML = `<div class="sketchfab-embed-wrapper">
+  <iframe title="<%= @model.name %>" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"
+    src="${embedUrl}">
+  </iframe>
+  <p style="font-size: 13px; font-weight: normal; margin: 5px;">
+    <a href="${embedUrl}" target="_blank" rel="nofollow">Просмотреть 3D модель</a> on My3DViewer
+  </p>
+</div>`;
+      document.getElementById("embedCode").value = embedHTML;
+      document.getElementById("embedOverlay").style.display = "block";
+      document.getElementById("embedModal").style.display = "block";
+    });
+    
+    document.getElementById("closeEmbed").addEventListener("click", function() {
+      document.getElementById("embedModal").style.display = "none";
+      document.getElementById("embedOverlay").style.display = "none";
+    });
+  </script>
 </body>
 </html>

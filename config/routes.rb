@@ -19,7 +19,11 @@ Rails.application.routes.draw do
   end
 
   resources :users do
-    resources :models
+    resources :models do
+      member do
+        get :embed
+      end
+    end
   end
 
   get "activity/mine"
