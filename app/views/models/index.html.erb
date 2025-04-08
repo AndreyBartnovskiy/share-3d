@@ -60,12 +60,6 @@
       background-size: cover;
       background-position: center;
     }
-    /* Babylon Viewer для интерактивного превью */
-    .model-preview {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
     /* Заглушка, если файл отсутствует */
     .no-preview {
       display: flex;
@@ -110,9 +104,7 @@
           <a href="<%= user_model_path(model.user, model) %>">
             <% if model.file.attached? %>
               <div class="model-thumb">
-                <babylon-viewer class="model-preview"
-                                 source="<%= rails_blob_url(model.file) %>"
-                </babylon-viewer>
+                <babylon-viewer source="<%= rails_blob_url(model.file) %>"</babylon-viewer>
               </div>
             <% else %>
               <div class="no-preview">
