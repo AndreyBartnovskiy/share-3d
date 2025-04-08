@@ -1,21 +1,96 @@
-<h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Мои 3D-модели</h1>
-
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
-  <% @models.each do |model| %>
-    <div class="bg-white shadow-lg rounded-xl p-4 transform hover:scale-105 transition">
-      <div class="w-full h-48 bg-gray-200 rounded-md overflow-hidden">
-        <div class="three-preview" data-obj-url="<%= rails_blob_url(model.file) %>"></div>
-      </div>
-
-      <h2 class="text-lg font-semibold text-gray-800 mt-2">
-        <%= link_to model.name, user_model_path(current_user, model), class: "hover:text-blue-600 transition" %>
-      </h2>
-
-      <p class="text-sm text-gray-500 mt-1"><%= truncate(model.description, length: 100) %></p>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Галерея 3D моделей</title>
+  <style>
+    /* Общие стили страницы */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #f4f4f4;
+      color: #333;
+    }
+    .gallery-container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 40px;
+    }
+    /* Сетка карточек моделей */
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-gap: 20px;
+    }
+    /* Карточка модели */
+    .model-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .model-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .model-card a {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    /* Превью (thumbnail) модели */
+    .model-thumb {
+      width: 100%;
+      height: 180px;
+      background-color: #eee;
+      background-size: cover;
+      background-position: center;
+    }
+    /* Информация по модели */
+    .model-info {
+      padding: 15px;
+    }
+    .model-info h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+    .model-info p {
+      margin: 0;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="gallery-container">
+    <h1>Галерея 3D моделей</h1>
+    <div class="model-grid">
+      <% @models.each do |model| %>
+        <div class="model-card">
+          <a href="<%= user_model_path(model.user, model) %>">
+            <% if model.respond_to?(:preview_image) && model.preview_image.attached? %>
+              <div class="model-thumb" style="background-image: url('<%= rails_blob_url(model.preview_image) %>');"></div>
+            <% else %>
+              <!-- Заглушка, если превью не прикреплено -->
+              <div class="model-thumb"></div>
+            <% end %>
+            <div class="model-info">
+              <h3><%= model.name %></h3>
+              <p><%= truncate(model.description, length: 100) %></p>
+            </div>
+          </a>
+        </div>
+      <% end %>
     </div>
-  <% end %>
-</div>
-
-<% content_for :javascript do %>
-  <%= javascript_include_tag "lib/index_models", type: "module", defer: true %>
-<% end %>
+  </div>
+</body>
+</html>
