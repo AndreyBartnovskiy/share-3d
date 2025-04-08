@@ -14,41 +14,60 @@
       background: rgba(255, 255, 255, 0.9);
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       max-width: 800px;
       margin: 20px auto;
     }
-    .model-header {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .model-description {
-      font-size: 16px;
-      color: #333;
+    .model-info {
       margin-bottom: 15px;
     }
-    .download-link {
+    .model-info p {
+      margin: 5px 0;
+      font-size: 16px;
+      color: #333;
+    }
+    .model-info strong {
+      font-size: 18px;
+    }
+    .viewer-container {
+      width: 100%;
+      height: 500px;
+      margin-bottom: 20px;
+    }
+    babylon-viewer {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .download-link, .embed-button {
       display: inline-block;
-      background: #007bff;
-      color: white;
       padding: 10px 15px;
       text-decoration: none;
       border-radius: 5px;
       font-weight: bold;
       transition: 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+    .download-link {
+      background: #007bff;
+      color: white;
     }
     .download-link:hover {
       background: #0056b3;
     }
-    .viewer-container {
-      width: 100%;
-      height: 500px;
-      margin-top: 15px;
+    .embed-button {
+      background: #28a745;
+      color: white;
     }
-    babylon-viewer {
-      width: 100%;
-      height: 100%;
+    .embed-button:hover {
+      background: #1e7e34;
     }
     /* Стили для модального окна embed */
     #embedModal {
@@ -84,28 +103,32 @@
 </head>
 <body>
   <div class="model-container">
-    <div class="model-header"><%= @model.name %></div>
-    <p class="model-description"><%= @model.description %></p>
-    <% if @model.file.attached? %>
-      <a class="download-link" href="<%= rails_blob_path(@model.file, disposition: 'attachment') %>">
-        📥 Скачать модель
-      </a>
-    <% else %>
-      <p>Файл модели не загружен</p>
-    <% end %>
+    <!-- Информация о модели -->
+    <div class="model-info">
+      <p><strong>Модель:</strong> <%= @model.name %></p>
+      <p><strong>Описание:</strong> <%= @model.description %></p>
+    </div>
 
+    <!-- Контейнер для 3D модели -->
     <div class="viewer-container">
       <babylon-viewer
         source="<%= rails_blob_url(@model.file) %>"
-        environment="auto"
         camera-auto-orbit
-        camera-auto-orbit-speed="0.080"
-        skybox="https://assets.babylonjs.com/environments/environmentSpecular.env">
+        camera-auto-orbit-speed="0.080">
       </babylon-viewer>
     </div>
 
-    <!-- Кнопка Embed -->
-    <button id="embedBtn">Embed</button>
+    <!-- Кнопки действий: Скачать и Embed -->
+    <div class="action-buttons">
+      <% if @model.file.attached? %>
+        <a class="download-link" href="<%= rails_blob_path(@model.file, disposition: 'attachment') %>">
+          📥 Скачать модель
+        </a>
+      <% else %>
+        <p>Файл модели не загружен</p>
+      <% end %>
+      <button class="embed-button" id="embedBtn">🔗 Embed</button>
+    </div>
   </div>
 
   <!-- Overlay и модальное окно для Embed-кода -->
@@ -119,7 +142,6 @@
 
   <script>
     document.getElementById("embedBtn").addEventListener("click", function() {
-          // Используем новый маршрут embed_model_path(@model)
       var embedUrl = "<%= url_for(embed_model_path(@model)) %>";
       var embedHTML = `<div class="sketchfab-embed-wrapper">
   <iframe title="<%= @model.name %>" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"
