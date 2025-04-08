@@ -28,11 +28,11 @@ class ModelsController < ApplicationController
     end
   end
 
+  private
+
   def embed
     @model = Model.find(params[:id])
   end
-
-  private
 
   def set_user
     @user = current_user
