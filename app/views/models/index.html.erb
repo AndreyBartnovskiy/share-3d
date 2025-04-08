@@ -107,10 +107,6 @@
               <div class="model-thumb">
                 <babylon-viewer class="model-preview"
                                  source="<%= rails_blob_url(model.file) %>"
-                                 environment="auto"
-                                 camera-auto-orbit
-                                 camera-auto-orbit-speed="0.02"
-                                 skybox="https://assets.babylonjs.com/environments/environmentSpecular.env">
                 </babylon-viewer>
               </div>
             <% else %>
@@ -127,30 +123,5 @@
       <% end %>
     </div>
   </div>
-
-  <script>
-    // Функция для принудительной "перезагрузки" всех Babylon Viewer
-    function reinitializeBabylonViewers() {
-      document.querySelectorAll("babylon-viewer").forEach(function(viewer) {
-        let src = viewer.getAttribute("source");
-        // Принудительно сбрасываем и возвращаем атрибут source
-        viewer.removeAttribute("source");
-        // Принудительный reflow
-        void viewer.offsetWidth;
-        viewer.setAttribute("source", src);
-      });
-    }
-
-    // Вызываем функцию при загрузке документа и при событии turbo:load (если используется Turbo)
-    document.addEventListener("DOMContentLoaded", function() {
-      setTimeout(reinitializeBabylonViewers, 500);
-    });
-    document.addEventListener("turbo:load", function() {
-      setTimeout(reinitializeBabylonViewers, 500);
-    });
-    window.addEventListener("load", function() {
-      setTimeout(reinitializeBabylonViewers, 500);
-    });
-  </script>
 </body>
 </html>
