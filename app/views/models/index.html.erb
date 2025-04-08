@@ -90,6 +90,11 @@
       font-size: 14px;
       color: #666;
     }
+    .model-info .ids {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #999;
+    }
   </style>
   <!-- Подключаем Babylon Viewer -->
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -117,6 +122,10 @@
             <div class="model-info">
               <h3><%= model.name %></h3>
               <p><%= truncate(model.description, length: 100) %></p>
+              <div class="ids">
+                ID модели: <%= model.id %><br>
+                Пользователь: <%= model.user.name %>
+              </div>
             </div>
           </a>
         </div>
