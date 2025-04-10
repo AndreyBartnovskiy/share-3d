@@ -26,7 +26,6 @@
         environment="auto"
         camera-auto-orbit
         camera-auto-orbit-speed="0.080"
-        skybox="https://assets.babylonjs.com/environments/environmentSpecular.env">
       </babylon-viewer>
     </div>
 
@@ -65,7 +64,6 @@
           environment="auto"
           camera-auto-orbit
           camera-auto-orbit-speed="0.070"
-          skybox="https://assets.babylonjs.com/environments/environmentSpecular.env">
         </babylon-viewer>
       </div>
 
@@ -187,139 +185,111 @@
 
   <script>
     (function() {
-      // Функция инициализации логики анализа
+      let isInitialized = false;
+      let currentEngine = null;
+    
+      function cleanup() {
+        if (currentEngine) {
+          currentEngine.dispose();
+          currentEngine = null;
+        }
+        const canvas = document.getElementById("tempCanvas");
+        if (canvas) canvas.remove();
+      }
+    
       function initializeBabylonAnalysis() {
+        if (isInitialized) return;
+        isInitialized = true;
+    
         console.log("Инициализация анализа Babylon...");
-  
-        // Ищем элементы на странице
-        const viewer = document.querySelector('babylon-viewer');
         const analysisButton = document.getElementById('runAnalysis');
         const analysisResultsElem = document.getElementById('analysisResults');
         const modelUrl = "<%= rails_blob_url(@model.file) %>";
-  
-        // Если кнопки нет (например, мы не на странице show) — выходим
+    
         if (!analysisButton) return;
-  
-        // Функция, которая анализирует сцену
+    
         function analyzeScene(scene) {
-          let totalMeshes = scene.meshes.length;
-          let totalVertices = 0;
-          let totalIndices = 0;
-          let analysisDetails = '';
-  
-          scene.meshes.forEach(mesh => {
-            const meshVertices = (mesh.getTotalVertices && mesh.getTotalVertices()) || 0;
-            totalVertices += meshVertices;
-  
-            const indices = (mesh.getIndices && mesh.getIndices()) || [];
-            totalIndices += indices ? indices.length : 0;
-  
-            let boundingInfo = '';
-            if (mesh.getBoundingInfo) {
-              const bbox = mesh.getBoundingInfo().boundingBox;
-              const min = bbox.minimum;
-              const max = bbox.maximum;
-              boundingInfo = `Размеры: (min: [${min.x.toFixed(2)}, ${min.y.toFixed(2)}, ${min.z.toFixed(2)}], max: [${max.x.toFixed(2)}, ${max.y.toFixed(2)}, ${max.z.toFixed(2)}])`;
-            }
-  
-            analysisDetails += `
-              <div class="mesh-analysis">
-                <strong>Меш: ${mesh.name}</strong>
-                <p>Вершин: ${meshVertices}</p>
-                <p>Индексов: ${indices ? indices.length : 0}</p>
-                <p>${boundingInfo}</p>
-              </div>
-              <hr>
-            `;
-          });
-  
-          return `
-            <p><strong>Общее количество мешей:</strong> ${totalMeshes}</p>
-            <p><strong>Общее количество вершин:</strong> ${totalVertices}</p>
-            <p><strong>Общее количество индексов:</strong> ${totalIndices}</p>
-            <hr>
-            ${analysisDetails}
-          `;
-        }
-  
-        // Функция для ручной загрузки сцены через BABYLON.SceneLoader.Load
-        // После загрузки вызывает callback(newScene, engine, canvas)
-        function loadSceneManually(sourceUrl, callback) {
-          console.log("Начинаю ручную загрузку сцены с URL:", sourceUrl);
-  
-          // Создаем временный скрытый canvas для инициализации Babylon Engine
-          let canvas = document.getElementById("tempCanvas");
-          if (canvas) {
-            canvas.parentNode.removeChild(canvas);
+          try {
+            let totalMeshes = 0;
+            let totalVertices = 0;
+            let totalIndices = 0;
+            let analysisDetails = '';
+    
+            scene.meshes.forEach(mesh => {
+              if (!mesh.isEnabled()) return;
+    
+              const vertices = mesh.getTotalVertices?.() || 0;
+              const indices = mesh.getIndices?.() || [];
+              
+              totalMeshes++;
+              totalVertices += vertices;
+              totalIndices += indices.length;
+    
+              analysisDetails += `
+                <div class="mesh-analysis">
+                  <strong>${mesh.name}</strong>
+                  <p>Вершин: ${vertices}</p>
+                  <p>Индексов: ${indices.length}</p>
+                </div>
+                <hr>`;
+            });
+    
+            return `
+              <p>Мешей: ${totalMeshes}</p>
+              <p>Вершин: ${totalVertices}</p>
+              <p>Индексов: ${totalIndices}</p>
+              <hr>${analysisDetails}`;
+          } catch(e) {
+            console.error(e);
+            return `<p class="error">Ошибка анализа: ${e.message}</p>`;
           }
-          canvas = document.createElement('canvas');
+        }
+    
+        function loadSceneManually(url, callback) {
+          cleanup();
+    
+          const canvas = document.createElement('canvas');
           canvas.id = "tempCanvas";
           canvas.style.display = 'none';
           document.body.appendChild(canvas);
-  
-          const engine = new BABYLON.Engine(canvas, true);
-  
-          BABYLON.SceneLoader.Load("", sourceUrl, engine,
-            function(newScene) {
-              console.log("Сцена загружена успешно");
-              // Если сцена не содержит камеры, добавляем дефолтную камеру
-              if (!newScene.activeCamera) {
-                console.log("Активная камера не найдена, добавляю дефолтную ArcRotateCamera");
-                const defaultCamera = new BABYLON.ArcRotateCamera("defaultCamera",
-                  Math.PI / 2, Math.PI / 4, 10, BABYLON.Vector3.Zero(), newScene);
-                defaultCamera.attachControl(canvas, true);
-                newScene.activeCamera = defaultCamera;
-                newScene.cameras.push(defaultCamera);
+    
+          currentEngine = new BABYLON.Engine(canvas, true, {
+            disableWebGL2Support: false,
+            preserveDrawingBuffer: true
+          }, false);
+    
+          BABYLON.SceneLoader.Load("", url, currentEngine, scene => {
+            scene.executeWhenReady(() => {
+              if (!scene.activeCamera) {
+                new BABYLON.ArcRotateCamera("cam", 
+                  Math.PI/2, Math.PI/4, 10, 
+                  BABYLON.Vector3.Zero(), scene
+                );
               }
-              // Ждем полной готовности сцены
-              newScene.executeWhenReady(function() {
-                console.log("Сцена готова для анализа");
-                callback(newScene, engine, canvas);
-              });
-            },
-            function(evt) {
-              console.log("Прогресс загрузки:", evt);
-            },
-            function(scene, message) {
-              console.error("Ошибка загрузки модели:", message);
-              alert("Ошибка загрузки модели: " + message);
-              document.body.removeChild(canvas);
-            }
-          );
+              callback(scene);
+            });
+          });
         }
-  
-        // Обработчик нажатия на кнопку "Запустить анализ"
+    
         analysisButton.addEventListener('click', () => {
-          console.log("Нажата кнопка анализа. modelUrl:", modelUrl);
-  
-          // Выполняем ручную загрузку сцены для анализа
-          loadSceneManually(modelUrl, function(newScene, engine, canvas) {
-            console.log("Ручная загрузка завершена, ожидаю задержку перед анализом");
-            // Задержка в 300 мс для обеспечения стабилизации сцены
-            setTimeout(() => {
-              console.log("Запускаю анализ сцены");
-              const resultsHTML = analyzeScene(newScene);
-              analysisResultsElem.innerHTML = resultsHTML;
-  
-              // Останавливаем render loop, освобождаем engine и удаляем временный canvas
-              engine.stopRenderLoop();
-              engine.dispose();
-              if (canvas && canvas.parentNode) {
-                canvas.parentNode.removeChild(canvas);
-              }
-            }, 2000); // Задержка 300 мс – можно настроить по необходимости
+          analysisResultsElem.innerHTML = "Анализ...";
+          analysisButton.disabled = true;
+    
+          loadSceneManually(modelUrl, scene => {
+            try {
+              const html = analyzeScene(scene);
+              analysisResultsElem.innerHTML = html;
+            } finally {
+              cleanup();
+              analysisButton.disabled = false;
+            }
           });
         });
       }
-  
-      // Если вы используете Turbo (Hotwire) или Turbolinks, слушаем соответствующее событие загрузки
-      if (window.Turbo || window.Turbolinks) {
-        document.addEventListener('turbo:load', initializeBabylonAnalysis);
-        document.addEventListener('turbolinks:load', initializeBabylonAnalysis);
-      } else {
-        document.addEventListener('DOMContentLoaded', initializeBabylonAnalysis);
-      }
+    
+      document.addEventListener('turbo:before-cache', cleanup);
+      document.addEventListener('turbo:load', initializeBabylonAnalysis);
     })();
-  </script>
+    </script>
 </body>
 </html>
