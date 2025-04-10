@@ -28,7 +28,7 @@ export class ModelAnalyzer {
   async runAnalysis() {
     if (!this.analysisButton?.dataset.modelUrl) return;
 
-    this.analysisResultsElem.innerHTML = "Анализ...";
+    this.analysisResultsElem.innerHTML = "<div class='loading'>Анализ модели...</div>";
     this.analysisButton.disabled = true;
 
     try {
@@ -92,17 +92,32 @@ export class ModelAnalyzer {
         analysisDetails += `
           <div class="mesh-analysis">
             <strong>${mesh.name}</strong>
-            <p>Вершин: ${vertices}</p>
-            <p>Индексов: ${indices.length}</p>
-          </div>
-          <hr>`;
+            <div class="mesh-stats">
+              <p><span class="stat-label">Вершин:</span> <span class="stat-value">${vertices.toLocaleString()}</span></p>
+              <p><span class="stat-label">Индексов:</span> <span class="stat-value">${indices.length.toLocaleString()}</span></p>
+            </div>
+          </div>`;
       });
 
       return `
-        <p>Мешей: ${totalMeshes}</p>
-        <p>Вершин: ${totalVertices}</p>
-        <p>Индексов: ${totalIndices}</p>
-        <hr>${analysisDetails}`;
+        <div class="analysis-summary">
+          <div class="summary-item">
+            <span class="summary-label">Всего мешей:</span>
+            <span class="summary-value">${totalMeshes.toLocaleString()}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Всего вершин:</span>
+            <span class="summary-value">${totalVertices.toLocaleString()}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Всего индексов:</span>
+            <span class="summary-value">${totalIndices.toLocaleString()}</span>
+          </div>
+        </div>
+        <div class="analysis-details">
+          <h4>Детальный анализ мешей</h4>
+          ${analysisDetails}
+        </div>`;
     } catch(e) {
       console.error(e);
       return `<p class="error">Ошибка анализа: ${e.message}</p>`;

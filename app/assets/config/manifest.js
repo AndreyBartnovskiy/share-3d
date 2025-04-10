@@ -14,3 +14,4 @@
 //= link controllers/upload_controller.js
 //= link models.css
 //= link controllers/model_viewer_controller.js
+//= link model_analysis.css
