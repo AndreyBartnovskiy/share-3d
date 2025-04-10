@@ -2,6 +2,8 @@ export class ModelAnalyzer {
   constructor() {
     this.isInitialized = false;
     this.currentEngine = null;
+    this.analysisVisible = false;
+    this.showAllMeshes = false;
     this.initializeElements();
     this.bindEvents();
   }
@@ -12,7 +14,7 @@ export class ModelAnalyzer {
   }
 
   bindEvents() {
-    this.analysisButton?.addEventListener('click', () => this.runAnalysis());
+    this.analysisButton?.addEventListener('click', () => this.toggleAnalysis());
     document.addEventListener('turbo:before-cache', () => this.cleanup());
   }
 
@@ -25,6 +27,18 @@ export class ModelAnalyzer {
     if (canvas) canvas.remove();
   }
 
+  toggleAnalysis() {
+    if (this.analysisVisible) {
+      // Скрыть анализ
+      this.analysisResultsElem.innerHTML = '';
+      this.analysisButton.textContent = 'Анализ модели';
+      this.analysisVisible = false;
+    } else {
+      // Показать анализ
+      this.runAnalysis();
+    }
+  }
+
   async runAnalysis() {
     if (!this.analysisButton?.dataset.modelUrl) return;
 
@@ -35,12 +49,47 @@ export class ModelAnalyzer {
       const scene = await this.loadScene(this.analysisButton.dataset.modelUrl);
       const html = this.analyzeScene(scene);
       this.analysisResultsElem.innerHTML = html;
+      
+      // Обновляем кнопку
+      this.analysisButton.textContent = 'Скрыть анализ';
+      this.analysisButton.disabled = false;
+      this.analysisVisible = true;
+      
+      // Добавляем обработчик для кнопки "Показать все меши"
+      const showAllButton = document.getElementById('showAllMeshes');
+      if (showAllButton) {
+        showAllButton.addEventListener('click', () => this.toggleAllMeshes());
+      }
     } catch (error) {
       console.error(error);
       this.analysisResultsElem.innerHTML = `<p class="error">Ошибка анализа: ${error.message}</p>`;
+      this.analysisButton.textContent = 'Анализ модели';
+      this.analysisButton.disabled = false;
     } finally {
       this.cleanup();
-      this.analysisButton.disabled = false;
+    }
+  }
+
+  toggleAllMeshes() {
+    this.showAllMeshes = !this.showAllMeshes;
+    const showAllButton = document.getElementById('showAllMeshes');
+    const meshItems = document.querySelectorAll('.mesh-analysis');
+    const hiddenMeshes = document.querySelectorAll('.mesh-analysis.hidden');
+    
+    if (this.showAllMeshes) {
+      // Показать все меши
+      hiddenMeshes.forEach(mesh => {
+        mesh.classList.remove('hidden');
+      });
+      showAllButton.textContent = 'Показать меньше мешей';
+    } else {
+      // Скрыть лишние меши
+      meshItems.forEach((mesh, index) => {
+        if (index >= 5) {
+          mesh.classList.add('hidden');
+        }
+      });
+      showAllButton.textContent = 'Показать все меши';
     }
   }
 
@@ -89,8 +138,11 @@ export class ModelAnalyzer {
         totalVertices += vertices;
         totalIndices += indices.length;
 
+        // Добавляем класс hidden для мешей после первых 5
+        const hiddenClass = totalMeshes > 5 ? ' hidden' : '';
+        
         analysisDetails += `
-          <div class="mesh-analysis">
+          <div class="mesh-analysis${hiddenClass}">
             <strong>${mesh.name}</strong>
             <div class="mesh-stats">
               <p><span class="stat-label">Вершин:</span> <span class="stat-value">${vertices.toLocaleString()}</span></p>
@@ -98,6 +150,10 @@ export class ModelAnalyzer {
             </div>
           </div>`;
       });
+
+      // Добавляем кнопку "Показать все меши" только если мешей больше 5
+      const showAllButton = totalMeshes > 5 ? 
+        `<button id="showAllMeshes" class="show-all-button">Показать все меши</button>` : '';
 
       return `
         <div class="analysis-summary">
@@ -117,6 +173,7 @@ export class ModelAnalyzer {
         <div class="analysis-details">
           <h4>Детальный анализ мешей</h4>
           ${analysisDetails}
+          ${showAllButton}
         </div>`;
     } catch(e) {
       console.error(e);

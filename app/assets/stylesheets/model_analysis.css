@@ -102,7 +102,19 @@
   background-color: #f0f4ff;
   border-radius: 6px;
   border-left: 3px solid #4a6cf7;
-  transition: transform 0.2s;
+  transition: transform 0.2s, opacity 0.3s, max-height 0.3s;
+  max-height: 500px;
+  opacity: 1;
+}
+
+.mesh-analysis.hidden {
+  display: none;
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
 }
 
 .mesh-analysis:hover {
@@ -167,4 +179,23 @@
   margin: 15px 0;
   border: none;
   border-top: 1px solid #d0d0d0;
+}
+
+/* Стили для кнопки "Показать все меши" */
+.show-all-button {
+  display: block;
+  margin: 15px auto 0;
+  padding: 8px 16px;
+  background-color: #f0f4ff;
+  color: #4a6cf7;
+  border: 1px solid #4a6cf7;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.show-all-button:hover {
+  background-color: #4a6cf7;
+  color: white;
 } 
