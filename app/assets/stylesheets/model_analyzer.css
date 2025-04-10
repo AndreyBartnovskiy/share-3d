@@ -1,0 +1,133 @@
+.analysis-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.summary-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.summary-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #4a90e2;
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.summary-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.mesh-analysis {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mesh-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.mesh-stats-summary {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.mesh-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.stat-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.error-value {
+  color: #dc3545;
+  font-size: 0.9rem;
+}
+
+.warning-value {
+  color: #ffc107;
+  font-weight: 500;
+}
+
+.stat-note {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+.analysis-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.analysis-note {
+  padding: 1.25rem;
+  background-color: #e9f5ff;
+  border-left: 4px solid #4a90e2;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  color: #2c3e50;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.analysis-note p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.analysis-note strong {
+  color: #1a365d;
+} 
