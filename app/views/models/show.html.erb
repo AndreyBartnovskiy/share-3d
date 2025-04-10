@@ -45,10 +45,18 @@
 
     <div class="model-analysis">
       <h3>Анализ модели</h3>
-      <div id="analysisResults">
-        <!-- Результаты анализа будут отображаться здесь -->
+      
+      <div class="analysis-buttons">
+        <button id="runBasicAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
+          <span class="button-icon">📊</span> Статистика полигональной сетки
+        </button>
+        <button id="runAdvancedAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
+          <span class="button-icon">⚡</span> Оценка корректности топологии
+        </button>
       </div>
-      <button id="runAnalysis" data-model-url="<%= rails_blob_url(@model.file) %>">Анализ модели</button>
+      
+      <div id="analysisResults" class="analysis-results hidden"></div>
+      <div id="advancedAnalysisResults" class="analysis-results hidden"></div>
     </div>    
   </div>
 

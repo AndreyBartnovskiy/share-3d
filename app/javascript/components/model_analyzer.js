@@ -3,18 +3,22 @@ export class ModelAnalyzer {
     this.isInitialized = false;
     this.currentEngine = null;
     this.analysisVisible = false;
+    this.advancedAnalysisVisible = false;
     this.showAllMeshes = false;
     this.initializeElements();
     this.bindEvents();
   }
 
   initializeElements() {
-    this.analysisButton = document.getElementById('runAnalysis');
+    this.basicAnalysisButton = document.getElementById('runBasicAnalysis');
+    this.advancedAnalysisButton = document.getElementById('runAdvancedAnalysis');
     this.analysisResultsElem = document.getElementById('analysisResults');
+    this.advancedAnalysisResultsElem = document.getElementById('advancedAnalysisResults');
   }
 
   bindEvents() {
-    this.analysisButton?.addEventListener('click', () => this.toggleAnalysis());
+    this.basicAnalysisButton?.addEventListener('click', () => this.toggleBasicAnalysis());
+    this.advancedAnalysisButton?.addEventListener('click', () => this.toggleAdvancedAnalysis());
     document.addEventListener('turbo:before-cache', () => this.cleanup());
   }
 
@@ -27,49 +31,57 @@ export class ModelAnalyzer {
     if (canvas) canvas.remove();
   }
 
-  toggleAnalysis() {
+  toggleBasicAnalysis() {
     if (this.analysisVisible) {
-      // Скрыть анализ
-      this.analysisResultsElem.innerHTML = '';
-      this.analysisButton.textContent = 'Анализ модели';
+      // Скрыть базовый анализ
+      this.analysisResultsElem.classList.remove('visible');
+      setTimeout(() => {
+        this.analysisResultsElem.innerHTML = '';
+        this.analysisResultsElem.classList.add('hidden');
+      }, 300);
+      this.basicAnalysisButton.innerHTML = '<span class="button-icon">📊</span> Статистика полигональной сетки';
       this.analysisVisible = false;
     } else {
-      // Показать анализ
-      this.runAnalysis();
+      // Показать базовый анализ
+      this.runBasicAnalysis();
     }
   }
 
-  async runAnalysis() {
-    if (!this.analysisButton?.dataset.modelUrl) return;
+  toggleAdvancedAnalysis() {
+    if (this.advancedAnalysisVisible) {
+      // Скрыть расширенный анализ
+      this.advancedAnalysisResultsElem.classList.remove('visible');
+      setTimeout(() => {
+        this.advancedAnalysisResultsElem.innerHTML = '';
+        this.advancedAnalysisResultsElem.classList.add('hidden');
+      }, 300);
+      this.advancedAnalysisButton.innerHTML = '<span class="button-icon">⚡</span> Оценка корректности топологии';
+      this.advancedAnalysisVisible = false;
+    } else {
+      // Показать расширенный анализ
+      this.runAdvancedAnalysis();
+    }
+  }
 
-    this.analysisResultsElem.innerHTML = "<div class='loading'>Анализ модели...</div>";
-    this.analysisButton.disabled = true;
+  async runBasicAnalysis() {
+    if (!this.basicAnalysisButton?.dataset.modelUrl) return;
+
+    this.analysisResultsElem.classList.remove('hidden');
+    this.analysisResultsElem.innerHTML = "<div class='loading'>Анализ полигональной сетки</div>";
+    this.basicAnalysisButton.disabled = true;
 
     try {
-      // Получаем URL модели
-      const modelUrl = this.analysisButton.dataset.modelUrl;
-      
-      // Загружаем модель для анализа
+      const modelUrl = this.basicAnalysisButton.dataset.modelUrl;
       const scene = await this.loadScene(modelUrl);
-      
-      // Выполняем базовый анализ
       const basicAnalysis = this.analyzeScene(scene);
       
-      // Выполняем расширенный анализ топологии
-      const topologyAnalysis = this.analyzeTopology(scene);
+      this.analysisResultsElem.innerHTML = basicAnalysis;
+      this.analysisResultsElem.classList.add('visible');
       
-      // Объединяем результаты
-      const combinedAnalysis = this.combineAnalysisResults(basicAnalysis, topologyAnalysis);
-      
-      // Отображаем результаты
-      this.analysisResultsElem.innerHTML = combinedAnalysis;
-      
-      // Обновляем кнопку
-      this.analysisButton.textContent = 'Скрыть анализ';
-      this.analysisButton.disabled = false;
+      this.basicAnalysisButton.innerHTML = '<span class="button-icon">📊</span> Скрыть статистику';
+      this.basicAnalysisButton.disabled = false;
       this.analysisVisible = true;
       
-      // Добавляем обработчик для кнопки "Показать все меши"
       const showAllButton = document.getElementById('showAllMeshes');
       if (showAllButton) {
         showAllButton.addEventListener('click', () => this.toggleAllMeshes());
@@ -77,11 +89,83 @@ export class ModelAnalyzer {
     } catch (error) {
       console.error(error);
       this.analysisResultsElem.innerHTML = `<p class="error">Ошибка анализа: ${error.message}</p>`;
-      this.analysisButton.textContent = 'Анализ модели';
-      this.analysisButton.disabled = false;
+      this.basicAnalysisButton.innerHTML = '<span class="button-icon">📊</span> Статистика полигональной сетки';
+      this.basicAnalysisButton.disabled = false;
     } finally {
       this.cleanup();
     }
+  }
+
+  async runAdvancedAnalysis() {
+    if (!this.advancedAnalysisButton?.dataset.modelUrl) return;
+
+    this.advancedAnalysisResultsElem.classList.remove('hidden');
+    this.advancedAnalysisResultsElem.innerHTML = "<div class='loading'>Оценка топологии</div>";
+    this.advancedAnalysisButton.disabled = true;
+
+    try {
+      const modelUrl = this.advancedAnalysisButton.dataset.modelUrl;
+      const scene = await this.loadScene(modelUrl);
+      const topologyAnalysis = this.analyzeTopology(scene);
+      
+      this.advancedAnalysisResultsElem.innerHTML = this.formatAdvancedAnalysisResults(topologyAnalysis);
+      this.advancedAnalysisResultsElem.classList.add('visible');
+      
+      this.advancedAnalysisButton.innerHTML = '<span class="button-icon">⚡</span> Скрыть оценку';
+      this.advancedAnalysisButton.disabled = false;
+      this.advancedAnalysisVisible = true;
+    } catch (error) {
+      console.error(error);
+      this.advancedAnalysisResultsElem.innerHTML = `<p class="error">Ошибка анализа: ${error.message}</p>`;
+      this.advancedAnalysisButton.innerHTML = '<span class="button-icon">⚡</span> Оценка корректности топологии';
+      this.advancedAnalysisButton.disabled = false;
+    } finally {
+      this.cleanup();
+    }
+  }
+
+  formatAdvancedAnalysisResults(topologyAnalysis) {
+    if (!topologyAnalysis) {
+      return '<p class="error">Не удалось выполнить расширенный анализ</p>';
+    }
+    
+    return `
+      <div class="advanced-analysis">
+        <h4>Расширенный анализ</h4>
+        
+        <div class="analysis-section">
+          <h5>Топология модели</h5>
+          <div class="analysis-item ${topologyAnalysis.isWatertight ? 'good' : 'warning'}">
+            <span class="analysis-label">Замкнутость модели:</span>
+            <span class="analysis-value">${topologyAnalysis.isWatertight ? 'Замкнута' : 'Не замкнута'}</span>
+          </div>
+          <div class="analysis-item ${topologyAnalysis.hasInvertedNormals ? 'warning' : 'good'}">
+            <span class="analysis-label">Нормали:</span>
+            <span class="analysis-value">${topologyAnalysis.hasInvertedNormals ? 'Есть инвертированные' : 'Корректные'}</span>
+          </div>
+          <div class="analysis-item ${topologyAnalysis.nonManifoldEdges > 0 ? 'warning' : 'good'}">
+            <span class="analysis-label">Не-манифольдные рёбра:</span>
+            <span class="analysis-value">${topologyAnalysis.nonManifoldEdges}</span>
+          </div>
+          <div class="analysis-item ${topologyAnalysis.floatingVertices > 0 ? 'warning' : 'good'}">
+            <span class="analysis-label">Плавающие вершины:</span>
+            <span class="analysis-value">${topologyAnalysis.floatingVertices}</span>
+          </div>
+        </div>
+        
+        <div class="analysis-section">
+          <h5>Плотность сетки</h5>
+          <div class="analysis-item ${topologyAnalysis.meshDensity.overSubdivided > 0 ? 'warning' : 'good'}">
+            <span class="analysis-label">Слишком плотные участки:</span>
+            <span class="analysis-value">${topologyAnalysis.meshDensity.overSubdivided}</span>
+          </div>
+          <div class="analysis-item ${topologyAnalysis.meshDensity.underSubdivided > 0 ? 'warning' : 'good'}">
+            <span class="analysis-label">Участки с низкой детализацией:</span>
+            <span class="analysis-value">${topologyAnalysis.meshDensity.underSubdivided}</span>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   analyzeTopology(scene) {
@@ -415,61 +499,6 @@ export class ModelAnalyzer {
       console.error("Ошибка при анализе плотности сетки:", error);
       return { overSubdivided: 0, underSubdivided: 0 };
     }
-  }
-
-  combineAnalysisResults(basicAnalysis, topologyAnalysis) {
-    if (!topologyAnalysis) {
-      return basicAnalysis;
-    }
-    
-    // Извлекаем HTML из базового анализа
-    const basicAnalysisHTML = basicAnalysis;
-    
-    // Создаем HTML для расширенного анализа
-    const advancedAnalysisHTML = `
-      <div class="advanced-analysis">
-        <h4>Расширенный анализ</h4>
-        
-        <div class="analysis-section">
-          <h5>Топология модели</h5>
-          <div class="analysis-item ${topologyAnalysis.isWatertight ? 'good' : 'warning'}">
-            <span class="analysis-label">Замкнутость модели:</span>
-            <span class="analysis-value">${topologyAnalysis.isWatertight ? 'Замкнута' : 'Не замкнута'}</span>
-          </div>
-          <div class="analysis-item ${topologyAnalysis.hasInvertedNormals ? 'warning' : 'good'}">
-            <span class="analysis-label">Нормали:</span>
-            <span class="analysis-value">${topologyAnalysis.hasInvertedNormals ? 'Есть инвертированные' : 'Корректные'}</span>
-          </div>
-          <div class="analysis-item ${topologyAnalysis.nonManifoldEdges > 0 ? 'warning' : 'good'}">
-            <span class="analysis-label">Не-манифольдные рёбра:</span>
-            <span class="analysis-value">${topologyAnalysis.nonManifoldEdges}</span>
-          </div>
-          <div class="analysis-item ${topologyAnalysis.floatingVertices > 0 ? 'warning' : 'good'}">
-            <span class="analysis-label">Плавающие вершины:</span>
-            <span class="analysis-value">${topologyAnalysis.floatingVertices}</span>
-          </div>
-        </div>
-        
-        <div class="analysis-section">
-          <h5>Плотность сетки</h5>
-          <div class="analysis-item ${topologyAnalysis.meshDensity.overSubdivided > 0 ? 'warning' : 'good'}">
-            <span class="analysis-label">Слишком плотные участки:</span>
-            <span class="analysis-value">${topologyAnalysis.meshDensity.overSubdivided}</span>
-          </div>
-          <div class="analysis-item ${topologyAnalysis.meshDensity.underSubdivided > 0 ? 'warning' : 'good'}">
-            <span class="analysis-label">Участки с низкой детализацией:</span>
-            <span class="analysis-value">${topologyAnalysis.meshDensity.underSubdivided}</span>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // Объединяем HTML
-    return `
-      ${basicAnalysisHTML}
-      <hr class="analysis-separator">
-      ${advancedAnalysisHTML}
-    `;
   }
 
   toggleAllMeshes() {
