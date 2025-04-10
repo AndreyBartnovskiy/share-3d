@@ -164,12 +164,19 @@ export class ModelAnalyzer {
     };
 
     // Вычисляем общее количество ребер для расчета процентов
-    const totalEdges = topologyAnalysis.meshDensity.overSubdivided + topologyAnalysis.meshDensity.underSubdivided + 
-                      (topologyAnalysis.totalEdges - topologyAnalysis.meshDensity.overSubdivided - topologyAnalysis.meshDensity.underSubdivided);
+    // Используем общее количество ребер из результатов анализа
+    const totalEdges = topologyAnalysis.totalEdges || 0;
     
-    // Вычисляем проценты
-    const overSubdividedPercent = totalEdges > 0 ? (topologyAnalysis.meshDensity.overSubdivided / totalEdges * 100).toFixed(1) : 0;
-    const underSubdividedPercent = totalEdges > 0 ? (topologyAnalysis.meshDensity.underSubdivided / totalEdges * 100).toFixed(1) : 0;
+    // Вычисляем проценты от общего количества ребер
+    const overSubdividedPercent = totalEdges > 0 ? 
+      (topologyAnalysis.meshDensity.overSubdivided / totalEdges * 100).toFixed(1) : 0;
+    const underSubdividedPercent = totalEdges > 0 ? 
+      (topologyAnalysis.meshDensity.underSubdivided / totalEdges * 100).toFixed(1) : 0;
+    
+    // Вычисляем количество нормальных ребер (не слишком плотных и не с низкой детализацией)
+    const normalEdges = totalEdges - topologyAnalysis.meshDensity.overSubdivided - topologyAnalysis.meshDensity.underSubdivided;
+    const normalEdgesPercent = totalEdges > 0 ? 
+      (normalEdges / totalEdges * 100).toFixed(1) : 0;
 
     return `
       <div class="advanced-analysis">
@@ -257,6 +264,20 @@ export class ModelAnalyzer {
             </div>
             <span class="analysis-value">${underSubdividedPercent}% (${topologyAnalysis.meshDensity.underSubdivided} рёбер)</span>
           </div>
+          
+          <div class="analysis-item good">
+            <div class="analysis-label-group">
+              <span class="analysis-label">Корректная плотность:</span>
+            </div>
+            <span class="analysis-value">${normalEdgesPercent}% (${normalEdges} рёбер)</span>
+          </div>
+          
+          <div class="analysis-item">
+            <div class="analysis-label-group">
+              <span class="analysis-label">Общее количество рёбер:</span>
+            </div>
+            <span class="analysis-value">100% (${totalEdges} рёбер)</span>
+          </div>
         </div>
       </div>
     `;
@@ -299,6 +320,7 @@ export class ModelAnalyzer {
         hasInvertedNormals: false,
         nonManifoldEdges: 0,
         floatingVertices: 0,
+        totalEdges: 0,
         meshDensity: {
           overSubdivided: 0,
           underSubdivided: 0
@@ -331,6 +353,9 @@ export class ModelAnalyzer {
         const densityAnalysis = this.analyzeMeshDensity(mesh);
         topologyResults.meshDensity.overSubdivided += densityAnalysis.overSubdivided;
         topologyResults.meshDensity.underSubdivided += densityAnalysis.underSubdivided;
+        
+        // Добавляем общее количество ребер из анализа плотности
+        topologyResults.totalEdges += densityAnalysis.totalEdges || 0;
       });
 
       return topologyResults;
@@ -527,7 +552,7 @@ export class ModelAnalyzer {
       const indices = mesh.getIndices();
       
       if (!positions || !indices || positions.length === 0 || indices.length === 0) {
-        return { overSubdivided: 0, underSubdivided: 0 };
+        return { overSubdivided: 0, underSubdivided: 0, totalEdges: 0 };
       }
       
       // Вычисляем среднюю длину рёбер
@@ -616,11 +641,12 @@ export class ModelAnalyzer {
       
       return {
         overSubdivided: overSubdividedCount,
-        underSubdivided: underSubdividedCount
+        underSubdivided: underSubdividedCount,
+        totalEdges: edgeCount
       };
     } catch (error) {
       console.error("Ошибка при анализе плотности сетки:", error);
-      return { overSubdivided: 0, underSubdivided: 0 };
+      return { overSubdivided: 0, underSubdivided: 0, totalEdges: 0 };
     }
   }
 
