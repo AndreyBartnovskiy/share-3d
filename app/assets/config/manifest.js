@@ -13,3 +13,4 @@
 //= link lib/show_model.js
 //= link controllers/upload_controller.js
 //= link models.css
+//= link controllers/model_viewer_controller.js

@@ -14,7 +14,7 @@
 <%= stylesheet_link_tag 'models', media: 'all' %>
 
 <body>
-  <div class="model-container">
+  <div class="model-container" data-controller="model-viewer">
     <h2 class="model-title">Модель: <%= @model.name %></h2>
     <div class="model-description">
       <p>Описание: <%= @model.description %></p>
@@ -47,31 +47,28 @@
       <div id="analysisResults">
         <!-- Результаты анализа будут отображаться здесь -->
       </div>
-      <button id="runAnalysis">Запустить анализ</button>
+      <button id="runAnalysis" data-model-url="<%= rails_blob_url(@model.file) %>">Запустить анализ</button>
     </div>    
   </div>
 
   <!-- Overlay и модальное окно для Embed -->
   <div class="overlay" id="overlay">
     <div class="advanced-embed-modal" id="advancedEmbedModal">
-      <!-- Кнопка-крестик для закрытия -->
       <button class="close-embed-modal" id="closeModal">✕</button>
 
-      <!-- Левая часть: мини-просмотр модели -->
       <div class="embed-viewer-container">
         <babylon-viewer
           id="miniViewer"
+          data-model-url="<%= rails_blob_url(@model.file) %>"
           environment="auto"
           camera-auto-orbit
           camera-auto-orbit-speed="0.070"
         </babylon-viewer>
       </div>
 
-      <!-- Правая часть: настройки и embed-код -->
       <div class="embed-settings">
         <h3>Настройки встраивания</h3>
 
-        <!-- Настройка размеров -->
         <div>
           <label>Размеры (px):</label>
           <div class="size-controls">
@@ -80,7 +77,6 @@
           </div>
         </div>
 
-        <!-- Тёмная тема -->
         <div>
           <label>Тема:</label>
           <div class="checkbox-group">
@@ -89,7 +85,6 @@
           </div>
         </div>
 
-        <!-- Авто-поворот и авто-старт -->
         <div>
           <label>Дополнительно:</label>
           <div class="checkbox-group">
@@ -102,194 +97,18 @@
           </div>
         </div>
 
-        <!-- Поле с Embed-кодом и кнопка копирования -->
         <div class="embed-code-container">
           <label for="embedCode">Embed-код:</label>
-          <textarea id="embedCode" readonly></textarea>
+          <textarea 
+            id="embedCode" 
+            readonly 
+            data-embed-url="<%= url_for(embed_model_path(@model)) %>"
+            data-model-name="<%= @model.name %>"
+          ></textarea>
           <button class="copy-button" id="copyEmbedCode">Скопировать</button>
         </div>
       </div>
     </div>
   </div>
-
-  <script>
-    // Открытие модального окна
-    const openButton = document.getElementById("openAdvancedEmbed");
-    const overlay = document.getElementById("overlay");
-    const closeButton = document.getElementById("closeModal");
-
-    openButton.addEventListener("click", () => {
-      overlay.style.display = "block";
-      generateEmbedCode();
-      // Инициализация мини-просмотра
-      const miniViewer = document.getElementById("miniViewer");
-      miniViewer.setAttribute("source", "<%= rails_blob_url(@model.file) %>");
-    });
-
-    closeButton.addEventListener("click", () => {
-      overlay.style.display = "none";
-    });
-
-    // Элементы настроек
-    const widthInput = document.getElementById("widthInput");
-    const heightInput = document.getElementById("heightInput");
-    const darkThemeCheckbox = document.getElementById("darkThemeCheckbox");
-    const autoRotateCheckbox = document.getElementById("autoRotateCheckbox");
-    const autoStartCheckbox = document.getElementById("autoStartCheckbox");
-    const embedCodeTextarea = document.getElementById("embedCode");
-
-    // Обновление embed-кода при изменениях
-    [widthInput, heightInput, darkThemeCheckbox, autoRotateCheckbox, autoStartCheckbox].forEach(el => {
-      el.addEventListener("change", generateEmbedCode);
-      el.addEventListener("keyup", generateEmbedCode);
-    });
-
-    function generateEmbedCode() {
-      const widthVal = widthInput.value || "640";
-      const heightVal = heightInput.value || "480";
-      const isDarkTheme = darkThemeCheckbox.checked;
-      const isAutoRotate = autoRotateCheckbox.checked;
-      const isAutoStart = autoStartCheckbox.checked;
-
-      const embedUrl = "<%= url_for(embed_model_path(@model)) %>" 
-        + `?darkTheme=${isDarkTheme}&autoRotate=${isAutoRotate}&autoStart=${isAutoStart}`;
-
-      const embedHTML = `
-<iframe
-  title="<%= @model.name %>"
-  width="${widthVal}" height="${heightVal}"
-  frameborder="0"
-  allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"
-  src="${embedUrl}">
-</iframe>
-<p style="font-size: 13px; font-weight: normal; margin: 5px;">
-  <a href="${embedUrl}" target="_blank" rel="nofollow">Просмотреть 3D модель</a> на Share3D
-</p>
-      `.trim();
-
-      embedCodeTextarea.value = embedHTML;
-    }
-
-    // Копирование embed-кода
-    const copyButton = document.getElementById("copyEmbedCode");
-    copyButton.addEventListener("click", () => {
-      navigator.clipboard.writeText(embedCodeTextarea.value)
-        .then(() => {
-          alert("Код успешно скопирован!");
-        })
-        .catch(err => {
-          console.error("Не удалось скопировать:", err);
-        });
-    });
-  </script>
-
-  <script>
-    (function() {
-      let isInitialized = false;
-      let currentEngine = null;
-    
-      function cleanup() {
-        if (currentEngine) {
-          currentEngine.dispose();
-          currentEngine = null;
-        }
-        const canvas = document.getElementById("tempCanvas");
-        if (canvas) canvas.remove();
-      }
-    
-      function initializeBabylonAnalysis() {
-        if (isInitialized) return;
-        isInitialized = true;
-    
-        console.log("Инициализация анализа Babylon...");
-        const analysisButton = document.getElementById('runAnalysis');
-        const analysisResultsElem = document.getElementById('analysisResults');
-        const modelUrl = "<%= rails_blob_url(@model.file) %>";
-    
-        if (!analysisButton) return;
-    
-        function analyzeScene(scene) {
-          try {
-            let totalMeshes = 0;
-            let totalVertices = 0;
-            let totalIndices = 0;
-            let analysisDetails = '';
-    
-            scene.meshes.forEach(mesh => {
-              if (!mesh.isEnabled()) return;
-    
-              const vertices = mesh.getTotalVertices?.() || 0;
-              const indices = mesh.getIndices?.() || [];
-              
-              totalMeshes++;
-              totalVertices += vertices;
-              totalIndices += indices.length;
-    
-              analysisDetails += `
-                <div class="mesh-analysis">
-                  <strong>${mesh.name}</strong>
-                  <p>Вершин: ${vertices}</p>
-                  <p>Индексов: ${indices.length}</p>
-                </div>
-                <hr>`;
-            });
-    
-            return `
-              <p>Мешей: ${totalMeshes}</p>
-              <p>Вершин: ${totalVertices}</p>
-              <p>Индексов: ${totalIndices}</p>
-              <hr>${analysisDetails}`;
-          } catch(e) {
-            console.error(e);
-            return `<p class="error">Ошибка анализа: ${e.message}</p>`;
-          }
-        }
-    
-        function loadSceneManually(url, callback) {
-          cleanup();
-    
-          const canvas = document.createElement('canvas');
-          canvas.id = "tempCanvas";
-          canvas.style.display = 'none';
-          document.body.appendChild(canvas);
-    
-          currentEngine = new BABYLON.Engine(canvas, true, {
-            disableWebGL2Support: false,
-            preserveDrawingBuffer: true
-          }, false);
-    
-          BABYLON.SceneLoader.Load("", url, currentEngine, scene => {
-            scene.executeWhenReady(() => {
-              if (!scene.activeCamera) {
-                new BABYLON.ArcRotateCamera("cam", 
-                  Math.PI/2, Math.PI/4, 10, 
-                  BABYLON.Vector3.Zero(), scene
-                );
-              }
-              callback(scene);
-            });
-          });
-        }
-    
-        analysisButton.addEventListener('click', () => {
-          analysisResultsElem.innerHTML = "Анализ...";
-          analysisButton.disabled = true;
-    
-          loadSceneManually(modelUrl, scene => {
-            try {
-              const html = analyzeScene(scene);
-              analysisResultsElem.innerHTML = html;
-            } finally {
-              cleanup();
-              analysisButton.disabled = false;
-            }
-          });
-        });
-      }
-    
-      document.addEventListener('turbo:before-cache', cleanup);
-      document.addEventListener('turbo:load', initializeBabylonAnalysis);
-    })();
-    </script>
 </body>
 </html>
