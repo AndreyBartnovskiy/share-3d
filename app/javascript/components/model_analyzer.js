@@ -721,17 +721,29 @@ export class ModelAnalyzer {
         // Вычисляем bounding box и его характеристики
         const boundingInfo = mesh.getBoundingInfo();
         const boundingBox = boundingInfo.boundingBox;
+        
+        // Обновляем bounding box
+        mesh.computeWorldMatrix(true);
+        boundingBox.minimumWorld = boundingBox.minimum;
+        boundingBox.maximumWorld = boundingBox.maximum;
+        
         const min = boundingBox.minimumWorld;
         const max = boundingBox.maximumWorld;
         
+        // Добавляем отладочную информацию
+        console.log(`Mesh: ${mesh.name}`);
+        console.log('Min:', min);
+        console.log('Max:', max);
+        
         // Вычисляем реальный объем bounding box
-        const volume = (max.x - min.x) * (max.y - min.y) * (max.z - min.z);
+        const volume = Math.abs((max.x - min.x) * (max.y - min.y) * (max.z - min.z));
+        console.log('Volume:', volume);
         
         // Вычисляем площадь поверхности bounding box
         const area = 2 * (
-          (max.x - min.x) * (max.y - min.y) + // XY плоскости
-          (max.y - min.y) * (max.z - min.z) + // YZ плоскости
-          (max.x - min.x) * (max.z - min.z)   // XZ плоскости
+          Math.abs((max.x - min.x) * (max.y - min.y)) + // XY плоскости
+          Math.abs((max.y - min.y) * (max.z - min.z)) + // YZ плоскости
+          Math.abs((max.x - min.x) * (max.z - min.z))   // XZ плоскости
         );
         
         totalMeshes++;
@@ -762,8 +774,10 @@ export class ModelAnalyzer {
       // Вычисляем средние значения
       const avgVerticesPerMesh = totalMeshes > 0 ? totalVertices / totalMeshes : 0;
       const avgTrianglesPerMesh = totalMeshes > 0 ? totalTriangles / totalMeshes : 0;
-      const avgVerticesDensity = totalVolume > 0 ? totalVertices / totalVolume : 0;
-      const avgTrianglesDensity = totalVolume > 0 ? totalTriangles / totalVolume : 0;
+      
+      // Используем площадь вместо объема для расчета плотности, так как она более стабильна
+      const avgVerticesDensity = totalArea > 0 ? totalVertices / totalArea : 0;
+      const avgTrianglesDensity = totalArea > 0 ? totalTriangles / totalArea : 0;
 
       // Добавляем кнопку "Показать все меши" только если мешей больше 5
       const showAllButton = totalMeshes > 5 ? 
@@ -772,36 +786,49 @@ export class ModelAnalyzer {
       return `
         <div class="analysis-summary">
           <div class="summary-item">
+            <div class="summary-icon">📦</div>
             <span class="summary-label">Всего мешей:</span>
             <span class="summary-value">${totalMeshes.toLocaleString()}</span>
           </div>
           <div class="summary-item">
+            <div class="summary-icon">⚪</div>
             <span class="summary-label">Всего вершин:</span>
             <span class="summary-value">${totalVertices.toLocaleString()}</span>
           </div>
           <div class="summary-item">
+            <div class="summary-icon">🔢</div>
             <span class="summary-label">Всего индексов:</span>
             <span class="summary-value">${totalIndices.toLocaleString()}</span>
           </div>
           <div class="summary-item">
+            <div class="summary-icon">🔺</div>
             <span class="summary-label">Всего треугольников:</span>
             <span class="summary-value">${totalTriangles.toLocaleString()}</span>
           </div>
           <div class="summary-item">
+            <div class="summary-icon">📊</div>
             <span class="summary-label">Среднее число вершин на меш:</span>
             <span class="summary-value">${avgVerticesPerMesh.toFixed(2)}</span>
           </div>
           <div class="summary-item">
+            <div class="summary-icon">📈</div>
             <span class="summary-label">Среднее число треугольников на меш:</span>
             <span class="summary-value">${avgTrianglesPerMesh.toFixed(2)}</span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">Плотность вершин на единицу объёма:</span>
-            <span class="summary-value">${avgVerticesDensity.toFixed(2)}</span>
+            <div class="summary-icon">🎯</div>
+            <span class="summary-label">Плотность вершин на единицу площади:</span>
+            <span class="summary-value">${(avgVerticesDensity * 1000).toFixed(2)} вершин/м²</span>
           </div>
           <div class="summary-item">
-            <span class="summary-label">Плотность треугольников на единицу объёма:</span>
-            <span class="summary-value">${avgTrianglesDensity.toFixed(2)}</span>
+            <div class="summary-icon">🎲</div>
+            <span class="summary-label">Плотность треугольников на единицу площади:</span>
+            <span class="summary-value">${(avgTrianglesDensity * 1000).toFixed(2)} треугольников/м²</span>
+          </div>
+          <div class="summary-item">
+            <div class="summary-icon">📦</div>
+            <span class="summary-label">Объём модели:</span>
+            <span class="summary-value">${(totalVolume / 1000000).toFixed(2)} м³</span>
           </div>
         </div>
         <div class="analysis-details">
