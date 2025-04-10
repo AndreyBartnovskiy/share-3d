@@ -109,6 +109,7 @@ export class ModelAnalyzer {
       const topologyAnalysis = this.analyzeTopology(scene);
       
       this.advancedAnalysisResultsElem.innerHTML = this.formatAdvancedAnalysisResults(topologyAnalysis);
+      this.bindTooltipEvents();
       this.advancedAnalysisResultsElem.classList.add('visible');
       
       this.advancedAnalysisButton.innerHTML = '<span class="button-icon">⚡</span> Скрыть оценку';
@@ -128,27 +129,95 @@ export class ModelAnalyzer {
     if (!topologyAnalysis) {
       return '<p class="error">Не удалось выполнить расширенный анализ</p>';
     }
-    
+
+    const tooltips = {
+      watertight: {
+        title: 'Замкнутость модели',
+        description: 'Проверяет, является ли модель "водонепроницаемой". В замкнутой модели каждое ребро должно принадлежать ровно двум граням. Это важно для 3D-печати и корректного рендеринга.',
+        recommendation: 'Если модель не замкнута, это может вызвать проблемы при печати или текстурировании. Рекомендуется исправить разрывы в сетке.'
+      },
+      normals: {
+        title: 'Нормали',
+        description: 'Нормали определяют направление "наружу" для каждой грани модели. Они важны для правильного освещения и текстурирования.',
+        recommendation: 'Инвертированные нормали могут привести к неправильному отображению теней и текстур. Рекомендуется исправить направление нормалей.'
+      },
+      nonManifold: {
+        title: 'Не-манифольдные рёбра',
+        description: 'Это рёбра, к которым примыкает больше двух граней. В реальном мире такая геометрия невозможна, что может вызвать проблемы при 3D-печати.',
+        recommendation: 'Наличие не-манифольдных рёбер может привести к ошибкам при печати. Рекомендуется упростить геометрию в этих местах.'
+      },
+      floatingVertices: {
+        title: 'Плавающие вершины',
+        description: 'Вершины, не связанные ни с одной гранью. Они не влияют на внешний вид модели, но увеличивают её размер.',
+        recommendation: 'Рекомендуется удалить плавающие вершины для оптимизации модели.'
+      },
+      overSubdivided: {
+        title: 'Слишком плотные участки',
+        description: 'Области модели с избыточным количеством полигонов. Это увеличивает размер файла и время рендеринга без заметного улучшения качества.',
+        recommendation: 'Рекомендуется упростить эти участки для оптимизации производительности.'
+      },
+      underSubdivided: {
+        title: 'Участки с низкой детализацией',
+        description: 'Области с недостаточным количеством полигонов. Это может привести к угловатости и потере деталей.',
+        recommendation: 'Рекомендуется увеличить детализацию этих участков для улучшения качества модели.'
+      }
+    };
+
     return `
       <div class="advanced-analysis">
-        <h4>Расширенный анализ</h4>
+        <h4>Оценка корректности топологии</h4>
         
         <div class="analysis-section">
           <h5>Топология модели</h5>
           <div class="analysis-item ${topologyAnalysis.isWatertight ? 'good' : 'warning'}">
-            <span class="analysis-label">Замкнутость модели:</span>
+            <div class="analysis-label-group">
+              <span class="analysis-label">Замкнутость модели:</span>
+              <span class="info-icon" data-tooltip="watertight">i</span>
+              <div class="info-tooltip" id="tooltip-watertight">
+                <p><strong>${tooltips.watertight.title}</strong></p>
+                <p>${tooltips.watertight.description}</p>
+                <p>${tooltips.watertight.recommendation}</p>
+              </div>
+            </div>
             <span class="analysis-value">${topologyAnalysis.isWatertight ? 'Замкнута' : 'Не замкнута'}</span>
           </div>
+
           <div class="analysis-item ${topologyAnalysis.hasInvertedNormals ? 'warning' : 'good'}">
-            <span class="analysis-label">Нормали:</span>
+            <div class="analysis-label-group">
+              <span class="analysis-label">Нормали:</span>
+              <span class="info-icon" data-tooltip="normals">i</span>
+              <div class="info-tooltip" id="tooltip-normals">
+                <p><strong>${tooltips.normals.title}</strong></p>
+                <p>${tooltips.normals.description}</p>
+                <p>${tooltips.normals.recommendation}</p>
+              </div>
+            </div>
             <span class="analysis-value">${topologyAnalysis.hasInvertedNormals ? 'Есть инвертированные' : 'Корректные'}</span>
           </div>
+
           <div class="analysis-item ${topologyAnalysis.nonManifoldEdges > 0 ? 'warning' : 'good'}">
-            <span class="analysis-label">Не-манифольдные рёбра:</span>
+            <div class="analysis-label-group">
+              <span class="analysis-label">Не-манифольдные рёбра:</span>
+              <span class="info-icon" data-tooltip="nonManifold">i</span>
+              <div class="info-tooltip" id="tooltip-nonManifold">
+                <p><strong>${tooltips.nonManifold.title}</strong></p>
+                <p>${tooltips.nonManifold.description}</p>
+                <p>${tooltips.nonManifold.recommendation}</p>
+              </div>
+            </div>
             <span class="analysis-value">${topologyAnalysis.nonManifoldEdges}</span>
           </div>
+
           <div class="analysis-item ${topologyAnalysis.floatingVertices > 0 ? 'warning' : 'good'}">
-            <span class="analysis-label">Плавающие вершины:</span>
+            <div class="analysis-label-group">
+              <span class="analysis-label">Плавающие вершины:</span>
+              <span class="info-icon" data-tooltip="floatingVertices">i</span>
+              <div class="info-tooltip" id="tooltip-floatingVertices">
+                <p><strong>${tooltips.floatingVertices.title}</strong></p>
+                <p>${tooltips.floatingVertices.description}</p>
+                <p>${tooltips.floatingVertices.recommendation}</p>
+              </div>
+            </div>
             <span class="analysis-value">${topologyAnalysis.floatingVertices}</span>
           </div>
         </div>
@@ -156,16 +225,62 @@ export class ModelAnalyzer {
         <div class="analysis-section">
           <h5>Плотность сетки</h5>
           <div class="analysis-item ${topologyAnalysis.meshDensity.overSubdivided > 0 ? 'warning' : 'good'}">
-            <span class="analysis-label">Слишком плотные участки:</span>
+            <div class="analysis-label-group">
+              <span class="analysis-label">Слишком плотные участки:</span>
+              <span class="info-icon" data-tooltip="overSubdivided">i</span>
+              <div class="info-tooltip" id="tooltip-overSubdivided">
+                <p><strong>${tooltips.overSubdivided.title}</strong></p>
+                <p>${tooltips.overSubdivided.description}</p>
+                <p>${tooltips.overSubdivided.recommendation}</p>
+              </div>
+            </div>
             <span class="analysis-value">${topologyAnalysis.meshDensity.overSubdivided}</span>
           </div>
+
           <div class="analysis-item ${topologyAnalysis.meshDensity.underSubdivided > 0 ? 'warning' : 'good'}">
-            <span class="analysis-label">Участки с низкой детализацией:</span>
+            <div class="analysis-label-group">
+              <span class="analysis-label">Участки с низкой детализацией:</span>
+              <span class="info-icon" data-tooltip="underSubdivided">i</span>
+              <div class="info-tooltip" id="tooltip-underSubdivided">
+                <p><strong>${tooltips.underSubdivided.title}</strong></p>
+                <p>${tooltips.underSubdivided.description}</p>
+                <p>${tooltips.underSubdivided.recommendation}</p>
+              </div>
+            </div>
             <span class="analysis-value">${topologyAnalysis.meshDensity.underSubdivided}</span>
           </div>
         </div>
       </div>
     `;
+  }
+
+  bindTooltipEvents() {
+    const tooltips = document.querySelectorAll('.info-tooltip');
+    let activeTooltip = null;
+
+    // Скрываем все тултипы при клике вне них
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.info-icon') && activeTooltip) {
+        activeTooltip.classList.remove('visible');
+        activeTooltip = null;
+      }
+    });
+
+    // Обработчики для иконок информации
+    document.querySelectorAll('.info-icon').forEach(icon => {
+      icon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tooltipId = `tooltip-${icon.dataset.tooltip}`;
+        const tooltip = document.getElementById(tooltipId);
+
+        if (activeTooltip && activeTooltip !== tooltip) {
+          activeTooltip.classList.remove('visible');
+        }
+
+        tooltip.classList.toggle('visible');
+        activeTooltip = tooltip.classList.contains('visible') ? tooltip : null;
+      });
+    });
   }
 
   analyzeTopology(scene) {
