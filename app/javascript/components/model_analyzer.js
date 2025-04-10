@@ -153,15 +153,23 @@ export class ModelAnalyzer {
       },
       overSubdivided: {
         title: 'Слишком плотные участки',
-        description: 'Области модели с избыточным количеством полигонов. Это увеличивает размер файла и время рендеринга без заметного улучшения качества.',
+        description: 'Области модели с избыточным количеством полигонов. Это увеличивает размер файла и время рендеринга без заметного улучшения качества. Математически: ребра, длина которых меньше 50% от средней длины ребра (L < 0.5 * L_средняя).',
         recommendation: 'Рекомендуется упростить эти участки для оптимизации производительности.'
       },
       underSubdivided: {
         title: 'Участки с низкой детализацией',
-        description: 'Области с недостаточным количеством полигонов. Это может привести к угловатости и потере деталей.',
+        description: 'Области с недостаточным количеством полигонов. Это может привести к угловатости и потере деталей. Математически: ребра, длина которых больше 200% от средней длины ребра (L > 2.0 * L_средняя).',
         recommendation: 'Рекомендуется увеличить детализацию этих участков для улучшения качества модели.'
       }
     };
+
+    // Вычисляем общее количество ребер для расчета процентов
+    const totalEdges = topologyAnalysis.meshDensity.overSubdivided + topologyAnalysis.meshDensity.underSubdivided + 
+                      (topologyAnalysis.totalEdges - topologyAnalysis.meshDensity.overSubdivided - topologyAnalysis.meshDensity.underSubdivided);
+    
+    // Вычисляем проценты
+    const overSubdividedPercent = totalEdges > 0 ? (topologyAnalysis.meshDensity.overSubdivided / totalEdges * 100).toFixed(1) : 0;
+    const underSubdividedPercent = totalEdges > 0 ? (topologyAnalysis.meshDensity.underSubdivided / totalEdges * 100).toFixed(1) : 0;
 
     return `
       <div class="advanced-analysis">
@@ -234,7 +242,7 @@ export class ModelAnalyzer {
                 <p>${tooltips.overSubdivided.recommendation}</p>
               </div>
             </div>
-            <span class="analysis-value">${topologyAnalysis.meshDensity.overSubdivided}</span>
+            <span class="analysis-value">${overSubdividedPercent}% (${topologyAnalysis.meshDensity.overSubdivided} рёбер)</span>
           </div>
 
           <div class="analysis-item ${topologyAnalysis.meshDensity.underSubdivided > 0 ? 'warning' : 'good'}">
@@ -247,7 +255,7 @@ export class ModelAnalyzer {
                 <p>${tooltips.underSubdivided.recommendation}</p>
               </div>
             </div>
-            <span class="analysis-value">${topologyAnalysis.meshDensity.underSubdivided}</span>
+            <span class="analysis-value">${underSubdividedPercent}% (${topologyAnalysis.meshDensity.underSubdivided} рёбер)</span>
           </div>
         </div>
       </div>
