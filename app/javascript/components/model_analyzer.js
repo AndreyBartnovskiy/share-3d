@@ -756,17 +756,47 @@ export class ModelAnalyzer {
         // Добавляем класс hidden для мешей после первых 5
         const hiddenClass = totalMeshes > 5 ? ' hidden' : '';
         
+        // Форматируем значения с проверкой на NaN и Infinity
+        const formatValue = (value, unit = '') => {
+          if (isNaN(value) || !isFinite(value)) {
+            return '<span class="error-value">Некорректное значение</span>';
+          }
+          if (value === 0 || value < 0.000001) {
+            return `<span class="warning-value">0.00${unit}</span>`;
+          }
+          return `${value.toFixed(2)}${unit}`;
+        };
+        
+        // Проверяем, является ли меш плоским или имеет нулевую толщину
+        const isFlatMesh = (max.x - min.x) < 0.001 || (max.y - min.y) < 0.001 || (max.z - min.z) < 0.001;
+        const hasZeroVolume = volume < 0.000001;
+        const volumeClass = (isFlatMesh || hasZeroVolume) ? 'warning-value' : '';
+        const volumeNote = isFlatMesh ? 
+          '<span class="stat-note">(плоский объект)</span>' : 
+          (hasZeroVolume ? '<span class="stat-note">(нулевой объем)</span>' : '');
+        
         analysisDetails += `
           <div class="mesh-analysis${hiddenClass}">
-            <strong>${mesh.name}</strong>
+            <div class="mesh-header">
+              <strong>${mesh.name}</strong>
+              <span class="mesh-stats-summary">
+                ${vertices.toLocaleString()} вершин | ${triangles.toLocaleString()} треугольников
+              </span>
+            </div>
             <div class="mesh-stats">
-              <p><span class="stat-label">Вершин:</span> <span class="stat-value">${vertices.toLocaleString()}</span></p>
-              <p><span class="stat-label">Индексов:</span> <span class="stat-value">${indices.length.toLocaleString()}</span></p>
-              <p><span class="stat-label">Треугольников:</span> <span class="stat-value">${triangles.toLocaleString()}</span></p>
-              <p><span class="stat-label">Плотность вершин/объём:</span> <span class="stat-value">${(vertices / volume).toFixed(2)}</span></p>
-              <p><span class="stat-label">Плотность треугольников/объём:</span> <span class="stat-value">${(triangles / volume).toFixed(2)}</span></p>
-              <p><span class="stat-label">Плотность вершин/площадь:</span> <span class="stat-value">${(vertices / area).toFixed(2)}</span></p>
-              <p><span class="stat-label">Плотность треугольников/площадь:</span> <span class="stat-value">${(triangles / area).toFixed(2)}</span></p>
+              <div class="stat-row">
+                <span class="stat-label">Плотность вершин:</span>
+                <span class="stat-value">${formatValue(vertices / area, ' вершин/м²')}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Плотность треугольников:</span>
+                <span class="stat-value">${formatValue(triangles / area, ' треугольников/м²')}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Объём:</span>
+                <span class="stat-value ${volumeClass}">${formatValue(volume / 1000000, ' м³')}</span>
+                ${volumeNote}
+              </div>
             </div>
           </div>`;
       });
@@ -782,6 +812,15 @@ export class ModelAnalyzer {
       // Добавляем кнопку "Показать все меши" только если мешей больше 5
       const showAllButton = totalMeshes > 5 ? 
         `<button id="showAllMeshes" class="show-all-button">Показать все меши</button>` : '';
+
+      // Добавляем пояснение о расчете объема
+      const volumeNote = `
+        <div class="analysis-note">
+          <p><strong>Примечание:</strong> Объем модели рассчитывается как сумма объемов bounding box каждого меша. 
+          Это приближенное значение, которое может не учитывать перекрытия мешей и внутренние пустоты. 
+          Для плоских объектов (2D) или объектов с нулевым объемом (например, линии или точки) объем может быть близок к нулю.</p>
+        </div>
+      `;
 
       return `
         <div class="analysis-summary">
@@ -835,6 +874,9 @@ export class ModelAnalyzer {
           <h4>Детальный анализ мешей</h4>
           ${analysisDetails}
           ${showAllButton}
+        </div>
+        <div class="analysis-footer">
+          ${volumeNote}
         </div>`;
     } catch(e) {
       console.error(e);
