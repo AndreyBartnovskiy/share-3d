@@ -294,21 +294,25 @@
   
           // Выполняем ручную загрузку сцены для анализа
           loadSceneManually(modelUrl, function(newScene, engine, canvas) {
-            console.log("Ручная загрузка завершена, начинаю анализ");
-            const resultsHTML = analyzeScene(newScene);
-            analysisResultsElem.innerHTML = resultsHTML;
+            console.log("Ручная загрузка завершена, ожидаю задержку перед анализом");
+            // Задержка в 300 мс для обеспечения стабилизации сцены
+            setTimeout(() => {
+              console.log("Запускаю анализ сцены");
+              const resultsHTML = analyzeScene(newScene);
+              analysisResultsElem.innerHTML = resultsHTML;
   
-            // Останавливаем render loop, освобождаем engine и удаляем временный canvas
-            engine.stopRenderLoop();
-            engine.dispose();
-            if (canvas && canvas.parentNode) {
-              canvas.parentNode.removeChild(canvas);
-            }
+              // Останавливаем render loop, освобождаем engine и удаляем временный canvas
+              engine.stopRenderLoop();
+              engine.dispose();
+              if (canvas && canvas.parentNode) {
+                canvas.parentNode.removeChild(canvas);
+              }
+            }, 2000); // Задержка 300 мс – можно настроить по необходимости
           });
         });
       }
   
-      // Если вы используете Turbo (Hotwire), слушаем событие "turbo:load"
+      // Если вы используете Turbo (Hotwire) или Turbolinks, слушаем соответствующее событие загрузки
       if (window.Turbo || window.Turbolinks) {
         document.addEventListener('turbo:load', initializeBabylonAnalysis);
         document.addEventListener('turbolinks:load', initializeBabylonAnalysis);
@@ -317,6 +321,5 @@
       }
     })();
   </script>
-  
 </body>
 </html>
