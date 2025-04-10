@@ -42,6 +42,14 @@
       <% end %>
       <button class="embed-button" id="openAdvancedEmbed">🔗 Embed</button>
     </div>
+
+    <div class="model-analysis">
+      <h3>Анализ модели</h3>
+      <div id="analysisResults">
+        <!-- Результаты анализа будут отображаться здесь -->
+      </div>
+      <button id="runAnalysis">Запустить анализ</button>
+    </div>    
   </div>
 
   <!-- Overlay и модальное окно для Embed -->
@@ -176,5 +184,111 @@
         });
     });
   </script>
+
+  <script>
+    // Получаем ссылку на элемент babylon-viewer
+    const viewer = document.querySelector('babylon-viewer');
+  
+    // Функция анализа сцены
+    function analyzeScene(scene) {
+      let totalMeshes = scene.meshes.length;
+      let totalVertices = 0;
+      let totalIndices = 0;
+      let analysisDetails = '';
+  
+      scene.meshes.forEach(mesh => {
+        const meshVertices = (mesh.getTotalVertices && mesh.getTotalVertices()) || 0;
+        totalVertices += meshVertices;
+  
+        const indices = (mesh.getIndices && mesh.getIndices()) || [];
+        totalIndices += indices ? indices.length : 0;
+  
+        let boundingInfo = '';
+        if (mesh.getBoundingInfo) {
+          const bbox = mesh.getBoundingInfo().boundingBox;
+          const min = bbox.minimum;
+          const max = bbox.maximum;
+          boundingInfo = `Размеры: (min: [${min.x.toFixed(2)}, ${min.y.toFixed(2)}, ${min.z.toFixed(2)}], max: [${max.x.toFixed(2)}, ${max.y.toFixed(2)}, ${max.z.toFixed(2)}])`;
+        }
+  
+        analysisDetails += `
+          <div class="mesh-analysis">
+            <strong>Меш: ${mesh.name}</strong>
+            <p>Вершин: ${meshVertices}</p>
+            <p>Индексов: ${indices ? indices.length : 0}</p>
+            <p>${boundingInfo}</p>
+          </div>
+          <hr>
+        `;
+      });
+  
+      return `
+        <p><strong>Общее количество мешей:</strong> ${totalMeshes}</p>
+        <p><strong>Общее количество вершин:</strong> ${totalVertices}</p>
+        <p><strong>Общее количество индексов:</strong> ${totalIndices}</p>
+        <hr>
+        ${analysisDetails}
+      `;
+    }
+  
+    // Функция для ручной загрузки сцены через BABYLON.SceneLoader.Load
+    function loadSceneManually(sourceUrl, callback) {
+      console.log("Начинаю ручную загрузку сцены с URL:", sourceUrl);
+  
+      // Создаем временный скрытый canvas
+      const canvas = document.createElement('canvas');
+      canvas.id = "tempCanvas";
+      canvas.style.display = 'none';
+      document.body.appendChild(canvas);
+  
+      const engine = new BABYLON.Engine(canvas, true);
+  
+      // Обратите внимание: если sourceUrl – полный URL (например, https://domain.com/path/model.gltf),
+      // то в данном случае rootUrl оставляем пустым, а файл передаем целиком.
+      BABYLON.SceneLoader.Load("", sourceUrl, engine,
+        function(newScene) {
+          console.log("Сцена загружена успешно");
+          // Запускаем цикл рендеринга для загруженной сцены (canvas скрыт)
+          engine.runRenderLoop(function () {
+            if (newScene) newScene.render();
+          });
+          callback(newScene);
+        },
+        function(evt) {
+          console.log("Прогресс загрузки:", evt);
+        },
+        function(scene, message) {
+          console.error("Ошибка загрузки модели:", message);
+          alert("Ошибка загрузки модели: " + message);
+          document.body.removeChild(canvas);
+        }
+      );
+    }
+  
+    // Обработчик нажатия на кнопку "Запустить анализ"
+    document.getElementById('runAnalysis').addEventListener('click', () => {
+      const modelUrl = "<%= rails_blob_url(@model.file) %>";
+      console.log("Нажата кнопка анализа. modelUrl:", modelUrl);
+  
+      // Если элемент viewer существует и в нем уже загружена сцена, сразу запускаем анализ
+      if (viewer && viewer.scene) {
+        console.log("Сцена уже загружена в viewer.");
+        const resultsHTML = analyzeScene(viewer.scene);
+        document.getElementById('analysisResults').innerHTML = resultsHTML;
+      } else {
+        console.log("Сцена в viewer отсутствует. Пытаюсь загрузить вручную...");
+        loadSceneManually(modelUrl, function(newScene) {
+          console.log("Ручная загрузка завершена.");
+          // Сохраняем загруженную сцену в viewer для последующего использования
+          if (viewer) {
+            viewer.scene = newScene;
+          }
+          const resultsHTML = analyzeScene(newScene);
+          document.getElementById('analysisResults').innerHTML = resultsHTML;
+        });
+      }
+    });
+  </script>
+  
 </body>
 </html>
