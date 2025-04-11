@@ -137,9 +137,7 @@ export class ModelArtifactAnalyzer {
   findDuplicateVertices(mesh) {
     try {
       const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-      if (!positions) {
-        return 0;
-      }
+      if (!positions) return 0;
 
       const vertexMap = new Map();
       let duplicates = 0;
@@ -149,11 +147,15 @@ export class ModelArtifactAnalyzer {
         const y = positions[i + 1];
         const z = positions[i + 2];
 
-        const key = `${x.toFixed(3)},${y.toFixed(3)},${z.toFixed(3)}`;
-        if (vertexMap.has(key)) {
+        // Используем хеширование для более быстрого сравнения
+        const hash = Math.floor(x * 1000) * 1000000 + 
+                    Math.floor(y * 1000) * 1000 + 
+                    Math.floor(z * 1000);
+
+        if (vertexMap.has(hash)) {
           duplicates++;
         } else {
-          vertexMap.set(key, true);
+          vertexMap.set(hash, true);
         }
       }
 
@@ -288,9 +290,7 @@ export class ModelArtifactAnalyzer {
       const indices = mesh.getIndices();
       const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
       
-      if (!indices || !positions) {
-        return 0;
-      }
+      if (!indices || !positions) return 0;
 
       let zeroArea = 0;
 
@@ -313,11 +313,17 @@ export class ModelArtifactAnalyzer {
           positions[indices[i + 2] * 3 + 2]
         );
 
-        const area = BABYLON.Vector3.Cross(
-          v2.subtract(v1),
-          v3.subtract(v1)
-        ).length() / 2;
+        // Быстрая проверка на коллинеарность
+        const v12 = v2.subtract(v1);
+        const v13 = v3.subtract(v1);
+        const cross = BABYLON.Vector3.Cross(v12, v13);
+        
+        if (cross.length() < this.ZERO_AREA_THRESHOLD) {
+          zeroArea++;
+          continue;
+        }
 
+        const area = cross.length() / 2;
         if (area < this.ZERO_AREA_THRESHOLD) {
           zeroArea++;
         }
@@ -427,6 +433,14 @@ export class ModelArtifactAnalyzer {
   }
 
   checkTriangleIntersection(triangle1, triangle2) {
+    // Быстрая проверка bounding box'ов
+    const bbox1 = this.getTriangleBoundingBox(triangle1);
+    const bbox2 = this.getTriangleBoundingBox(triangle2);
+    
+    if (!this.checkBoundingBoxIntersection(bbox1, bbox2)) {
+      return false;
+    }
+
     // Проверяем пересечение ребер первого треугольника со вторым
     const edges1 = [
       [triangle1.a, triangle1.b],
@@ -460,6 +474,30 @@ export class ModelArtifactAnalyzer {
     }
     
     return false;
+  }
+
+  getTriangleBoundingBox(triangle) {
+    const min = new THREE.Vector3(
+      Math.min(triangle.a.x, triangle.b.x, triangle.c.x),
+      Math.min(triangle.a.y, triangle.b.y, triangle.c.y),
+      Math.min(triangle.a.z, triangle.b.z, triangle.c.z)
+    );
+    
+    const max = new THREE.Vector3(
+      Math.max(triangle.a.x, triangle.b.x, triangle.c.x),
+      Math.max(triangle.a.y, triangle.b.y, triangle.c.y),
+      Math.max(triangle.a.z, triangle.b.z, triangle.c.z)
+    );
+    
+    return { min, max };
+  }
+
+  checkBoundingBoxIntersection(bbox1, bbox2) {
+    return !(
+      bbox1.max.x < bbox2.min.x || bbox1.min.x > bbox2.max.x ||
+      bbox1.max.y < bbox2.min.y || bbox1.min.y > bbox2.max.y ||
+      bbox1.max.z < bbox2.min.z || bbox1.min.z > bbox2.max.z
+    );
   }
 
   checkEdgeIntersection(p1, p2, p3, p4) {
