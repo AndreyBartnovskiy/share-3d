@@ -1,0 +1,134 @@
+.artifact-analysis {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.artifact-analysis h4 {
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+  font-size: 1.25rem;
+}
+
+.analysis-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.analysis-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.analysis-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.analysis-item.good {
+  border-left: 4px solid #28a745;
+}
+
+.analysis-item.warning {
+  border-left: 4px solid #ffc107;
+}
+
+.analysis-label-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.analysis-label {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.analysis-value {
+  font-weight: 600;
+  color: #2c3e50;
+  padding: 0.25rem 0.5rem;
+  background: white;
+  border-radius: 4px;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: #e9ecef;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  color: #6c757d;
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.info-icon:hover {
+  background: #dee2e6;
+  color: #495057;
+}
+
+.info-tooltip {
+  position: absolute;
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  max-width: 300px;
+  z-index: 1000;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.info-tooltip.visible {
+  display: block;
+  opacity: 1;
+}
+
+.info-tooltip p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.info-tooltip strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.info-note {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.error {
+  color: #dc3545;
+  padding: 1rem;
+  background: #f8d7da;
+  border-radius: 6px;
+  margin: 1rem 0;
+} 

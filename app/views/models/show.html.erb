@@ -9,6 +9,40 @@
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
   <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@babylonjs/viewer@7.52.1/dist/babylon-viewer.esm.min.js"></script>
+  
+  <!-- Дополнительные библиотеки для анализа -->
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+    
+    // Загружаем earcut как обычный скрипт
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/earcut@2.2.4/dist/earcut.min.js';
+    script.onload = () => {
+      // Делаем объекты доступными глобально для ModelArtifactAnalyzer
+      window.THREE = THREE;
+      window.earcut = window.earcut;
+      
+      // Создаем необходимые классы из Three.js
+      class Triangle {
+        constructor(a, b, c) {
+          this.a = a;
+          this.b = b;
+          this.c = c;
+        }
+      }
+      
+      class Line3 {
+        constructor(start, end) {
+          this.start = start;
+          this.end = end;
+        }
+      }
+      
+      window.Triangle = Triangle;
+      window.Line3 = Line3;
+    };
+    document.head.appendChild(script);
+  </script>
 </head>
 
 <%= stylesheet_link_tag 'models', media: 'all' %>
@@ -24,7 +58,6 @@
     <div class="viewer-container">
       <babylon-viewer
         source="<%= rails_blob_url(@model.file) %>"
-        environment="auto"
         camera-auto-orbit
         camera-auto-orbit-speed="0.080"
       </babylon-viewer>
@@ -53,10 +86,14 @@
         <button id="runAdvancedAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
           <span class="button-icon">⚡</span> Оценка корректности топологии
         </button>
+        <button id="runArtifactAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
+          <span class="button-icon">🔍</span> Поиск артефактов
+        </button>
       </div>
       
       <div id="analysisResults" class="analysis-results hidden"></div>
       <div id="advancedAnalysisResults" class="analysis-results hidden"></div>
+      <div id="artifactAnalysisResults" class="analysis-results hidden"></div>
     </div>    
   </div>
 
@@ -69,7 +106,6 @@
         <babylon-viewer
           id="miniViewer"
           data-model-url="<%= rails_blob_url(@model.file) %>"
-          environment="auto"
           camera-auto-orbit
           camera-auto-orbit-speed="0.070"
         </babylon-viewer>
