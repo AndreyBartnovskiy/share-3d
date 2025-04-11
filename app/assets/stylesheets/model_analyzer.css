@@ -130,4 +130,62 @@
 
 .analysis-note strong {
   color: #1a365d;
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #4a90e2;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.info-icon:hover {
+  background-color: #357abd;
+}
+
+.info-tooltip {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 1000;
+  max-width: 300px;
+  display: none;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #333;
+}
+
+.info-tooltip.visible {
+  display: block;
+}
+
+.info-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent white;
+  filter: drop-shadow(0 -2px 2px rgba(0,0,0,0.1));
+}
+
+.info-tooltip p {
+  margin: 0 0 8px 0;
+}
+
+.info-tooltip p:last-child {
+  margin-bottom: 0;
 } 

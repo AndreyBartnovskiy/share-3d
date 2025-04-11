@@ -60,6 +60,7 @@ export class ModelArtifactAnalyzer {
       const artifactAnalysis = this.analyzeArtifacts(scene);
       
       this.artifactAnalysisResults.innerHTML = this.formatArtifactAnalysisResults(artifactAnalysis);
+      this.bindTooltipEvents();
       this.artifactAnalysisResults.classList.add('visible');
       
       this.artifactAnalysisButton.innerHTML = '<span class="button-icon">🔍</span> Скрыть результаты';
@@ -665,6 +666,35 @@ export class ModelArtifactAnalyzer {
           resolve(scene);
         });
       }, null, reject);
+    });
+  }
+
+  bindTooltipEvents() {
+    const tooltips = document.querySelectorAll('.info-tooltip');
+    let activeTooltip = null;
+
+    // Скрываем все тултипы при клике вне них
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.info-icon') && activeTooltip) {
+        activeTooltip.classList.remove('visible');
+        activeTooltip = null;
+      }
+    });
+
+    // Обработчики для иконок информации
+    document.querySelectorAll('.info-icon').forEach(icon => {
+      icon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tooltipId = `tooltip-${icon.dataset.tooltip}`;
+        const tooltip = document.getElementById(tooltipId);
+
+        if (activeTooltip && activeTooltip !== tooltip) {
+          activeTooltip.classList.remove('visible');
+        }
+
+        tooltip.classList.toggle('visible');
+        activeTooltip = tooltip.classList.contains('visible') ? tooltip : null;
+      });
     });
   }
 } 
