@@ -115,7 +115,6 @@ export class ModelArtifactAnalyzer {
     try {
       const indices = mesh.getIndices();
       if (!indices) {
-        console.warn('Не удалось получить индексы меша');
         return 0;
       }
 
@@ -126,13 +125,11 @@ export class ModelArtifactAnalyzer {
 
       const totalVertices = mesh.getTotalVertices();
       if (totalVertices === undefined) {
-        console.warn('Не удалось получить общее количество вершин');
         return 0;
       }
 
       return Math.max(0, totalVertices - usedVertices.size);
     } catch (error) {
-      console.error('Ошибка при поиске плавающих вершин:', error);
       return 0;
     }
   }
@@ -141,7 +138,6 @@ export class ModelArtifactAnalyzer {
     try {
       const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
       if (!positions) {
-        console.warn('Не удалось получить позиции вершин');
         return 0;
       }
 
@@ -163,7 +159,6 @@ export class ModelArtifactAnalyzer {
 
       return duplicates;
     } catch (error) {
-      console.error('Ошибка при поиске дублирующихся вершин:', error);
       return 0;
     }
   }
@@ -172,7 +167,6 @@ export class ModelArtifactAnalyzer {
     try {
       const indices = mesh.getIndices();
       if (!indices) {
-        console.warn('Не удалось получить индексы меша');
         return 0;
       }
 
@@ -194,7 +188,6 @@ export class ModelArtifactAnalyzer {
 
       return duplicates;
     } catch (error) {
-      console.error('Ошибка при поиске дублирующихся полигонов:', error);
       return 0;
     }
   }
@@ -205,7 +198,6 @@ export class ModelArtifactAnalyzer {
       const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
       
       if (!indices || !positions) {
-        console.warn('Не удалось получить данные меша');
         return 0;
       }
 
@@ -287,7 +279,6 @@ export class ModelArtifactAnalyzer {
       
       return flipped;
     } catch (error) {
-      console.error('Ошибка при поиске перекрученных полигонов:', error);
       return 0;
     }
   }
@@ -298,7 +289,6 @@ export class ModelArtifactAnalyzer {
       const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
       
       if (!indices || !positions) {
-        console.warn('Не удалось получить данные меша');
         return 0;
       }
 
@@ -335,7 +325,6 @@ export class ModelArtifactAnalyzer {
 
       return zeroArea;
     } catch (error) {
-      console.error('Ошибка при поиске полигонов с нулевой площадью:', error);
       return 0;
     }
   }
@@ -344,34 +333,13 @@ export class ModelArtifactAnalyzer {
     try {
       // Пропускаем корневой меш
       if (mesh.name === '__root__') {
-        console.log('Пропускаем корневой меш __root__');
         return 0;
       }
-      
-      console.log('Начинаем анализ самопересечений для меша:', mesh.name);
       
       const indices = mesh.getIndices();
       const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
       
-      if (!indices) {
-        console.warn('Не удалось получить индексы меша:', mesh.name);
-        return 0;
-      }
-      
-      if (!positions) {
-        console.warn('Не удалось получить позиции вершин меша:', mesh.name);
-        return 0;
-      }
-      
-      console.log('Получено индексов:', indices.length, 'позиций:', positions.length);
-      
-      if (indices.length === 0 || positions.length === 0) {
-        console.warn('Меш не содержит данных:', mesh.name);
-        return 0;
-      }
-      
-      if (indices.length % 3 !== 0) {
-        console.warn('Некорректное количество индексов (не кратно 3):', indices.length);
+      if (!indices || !positions || indices.length === 0 || positions.length === 0 || indices.length % 3 !== 0) {
         return 0;
       }
 
@@ -381,7 +349,6 @@ export class ModelArtifactAnalyzer {
       // Получаем матрицу трансформации меша
       const worldMatrix = mesh.getWorldMatrix();
       if (!worldMatrix) {
-        console.warn('Не удалось получить матрицу трансформации меша:', mesh.name);
         return 0;
       }
       
@@ -396,7 +363,6 @@ export class ModelArtifactAnalyzer {
         if (idx1 * 3 + 2 >= positions.length || 
             idx2 * 3 + 2 >= positions.length || 
             idx3 * 3 + 2 >= positions.length) {
-          console.warn('Некорректные индексы вершин:', idx1, idx2, idx3);
           continue;
         }
         
@@ -436,8 +402,6 @@ export class ModelArtifactAnalyzer {
         triangles.push(triangle);
       }
       
-      console.log('Собрано треугольников:', triangles.length);
-      
       // Проверяем пересечения между треугольниками
       for (let i = 0; i < triangles.length; i++) {
         const triangle1 = triangles[i];
@@ -456,10 +420,8 @@ export class ModelArtifactAnalyzer {
         }
       }
       
-      console.log('Найдено самопересечений:', selfIntersecting);
       return selfIntersecting;
     } catch (error) {
-      console.error('Ошибка при поиске самопересекающихся полигонов:', error);
       return 0;
     }
   }
