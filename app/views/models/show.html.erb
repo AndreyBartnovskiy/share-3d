@@ -9,6 +9,12 @@
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
   <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/@babylonjs/viewer@7.52.1/dist/babylon-viewer.esm.min.js"></script>
+  
+  <!-- Дополнительные библиотеки для анализа -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/earcut@2.2.4/dist/earcut.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/math/Triangle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/math/Line3.js"></script>
 </head>
 
 <%= stylesheet_link_tag 'models', media: 'all' %>
@@ -53,10 +59,14 @@
         <button id="runAdvancedAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
           <span class="button-icon">⚡</span> Оценка корректности топологии
         </button>
+        <button id="runArtifactAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
+          <span class="button-icon">🔍</span> Поиск артефактов
+        </button>
       </div>
       
       <div id="analysisResults" class="analysis-results hidden"></div>
       <div id="advancedAnalysisResults" class="analysis-results hidden"></div>
+      <div id="artifactAnalysisResults" class="analysis-results hidden"></div>
     </div>    
   </div>
 
