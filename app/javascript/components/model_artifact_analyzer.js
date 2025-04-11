@@ -341,11 +341,36 @@ export class ModelArtifactAnalyzer {
 
   findSelfIntersectingFaces(mesh) {
     try {
+      // Пропускаем корневой меш
+      if (mesh.name === '__root__') {
+        console.log('Пропускаем корневой меш __root__');
+        return 0;
+      }
+      
+      console.log('Начинаем анализ самопересечений для меша:', mesh.name);
+      
       const indices = mesh.getIndices();
       const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
       
-      if (!indices || !positions) {
-        console.warn('Не удалось получить данные меша');
+      if (!indices) {
+        console.warn('Не удалось получить индексы меша:', mesh.name);
+        return 0;
+      }
+      
+      if (!positions) {
+        console.warn('Не удалось получить позиции вершин меша:', mesh.name);
+        return 0;
+      }
+      
+      console.log('Получено индексов:', indices.length, 'позиций:', positions.length);
+      
+      if (indices.length === 0 || positions.length === 0) {
+        console.warn('Меш не содержит данных:', mesh.name);
+        return 0;
+      }
+      
+      if (indices.length % 3 !== 0) {
+        console.warn('Некорректное количество индексов (не кратно 3):', indices.length);
         return 0;
       }
 
@@ -354,34 +379,49 @@ export class ModelArtifactAnalyzer {
       
       // Получаем матрицу трансформации меша
       const worldMatrix = mesh.getWorldMatrix();
+      if (!worldMatrix) {
+        console.warn('Не удалось получить матрицу трансформации меша:', mesh.name);
+        return 0;
+      }
       
       // Собираем все треугольники в мировых координатах
       for (let i = 0; i < indices.length; i += 3) {
         if (i + 2 >= indices.length) break;
         
+        const idx1 = indices[i];
+        const idx2 = indices[i + 1];
+        const idx3 = indices[i + 2];
+        
+        if (idx1 * 3 + 2 >= positions.length || 
+            idx2 * 3 + 2 >= positions.length || 
+            idx3 * 3 + 2 >= positions.length) {
+          console.warn('Некорректные индексы вершин:', idx1, idx2, idx3);
+          continue;
+        }
+        
         const v1 = BABYLON.Vector3.TransformCoordinates(
           new BABYLON.Vector3(
-            positions[indices[i] * 3],
-            positions[indices[i] * 3 + 1],
-            positions[indices[i] * 3 + 2]
+            positions[idx1 * 3],
+            positions[idx1 * 3 + 1],
+            positions[idx1 * 3 + 2]
           ),
           worldMatrix
         );
         
         const v2 = BABYLON.Vector3.TransformCoordinates(
           new BABYLON.Vector3(
-            positions[indices[i + 1] * 3],
-            positions[indices[i + 1] * 3 + 1],
-            positions[indices[i + 1] * 3 + 2]
+            positions[idx2 * 3],
+            positions[idx2 * 3 + 1],
+            positions[idx2 * 3 + 2]
           ),
           worldMatrix
         );
         
         const v3 = BABYLON.Vector3.TransformCoordinates(
           new BABYLON.Vector3(
-            positions[indices[i + 2] * 3],
-            positions[indices[i + 2] * 3 + 1],
-            positions[indices[i + 2] * 3 + 2]
+            positions[idx3 * 3],
+            positions[idx3 * 3 + 1],
+            positions[idx3 * 3 + 2]
           ),
           worldMatrix
         );
@@ -394,6 +434,8 @@ export class ModelArtifactAnalyzer {
         
         triangles.push(triangle);
       }
+      
+      console.log('Собрано треугольников:', triangles.length);
       
       // Проверяем пересечения между треугольниками
       for (let i = 0; i < triangles.length; i++) {
@@ -413,6 +455,7 @@ export class ModelArtifactAnalyzer {
         }
       }
       
+      console.log('Найдено самопересечений:', selfIntersecting);
       return selfIntersecting;
     } catch (error) {
       console.error('Ошибка при поиске самопересекающихся полигонов:', error);
