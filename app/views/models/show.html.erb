@@ -30,7 +30,6 @@
     <div class="viewer-container">
       <babylon-viewer
         source="<%= rails_blob_url(@model.file) %>"
-        environment="auto"
         camera-auto-orbit
         camera-auto-orbit-speed="0.080"
       </babylon-viewer>
@@ -79,7 +78,6 @@
         <babylon-viewer
           id="miniViewer"
           data-model-url="<%= rails_blob_url(@model.file) %>"
-          environment="auto"
           camera-auto-orbit
           camera-auto-orbit-speed="0.070"
         </babylon-viewer>
