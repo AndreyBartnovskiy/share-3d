@@ -1,16 +1,7 @@
-<div class="flex p-5" aria-label="Breadcrumb">
-  <ol class="inline-flex items-center space-x-1 md:space-x-3">
-    <li class="inline-flex items-center">
-      <h2 href="#" class="inline-flex items-center font-medium text-gray-700 hover:text-gray-900">
-        Пользователи
-      </h2>
-    </li>
-  </ol>
-</div>
-<div class="flex justify-center">
-  <div class="p-2 w-full bg-white rounded-lg border border-gray-200 shadow-md sm:p-6 lg:p-8">
-    <div class="flex justify-between items-center mb-4">
-      <h5 class="text-xl font-bold leading-none text-gray-900">
+<div class="page-container">
+  <div class="content-container">
+    <div class="header-container">
+      <h5 class="header-title">
         <% if current_user.roles&.first&.name == "admin" %>
           Управление пользователями
         <% else %>
@@ -18,46 +9,47 @@
         <% end %>
       </h5>
       <% if current_user.roles&.first&.name == "admin" %>
-        <%= link_to "Пригласить пользователя", new_profile_user_path, class: "inline-flex text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center" %>
+        <%= link_to "Пригласить пользователя", new_profile_user_path, class: "action-button" %>
       <% end %>
     </div>
-    <table class="w-full text-sm text-left text-gray-500">
-      <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+
+    <table class="data-table">
+      <thead>
         <tr>
-          <th scope="col" class="px-6 py-3">Имя</th>
-          <th scope="col" class="px-6 py-3">E-mail</th>
-          <th scope="col" class="px-6 py-3">Статус</th>
-          <th scope="col" class="px-6 py-3">Роль</th>
-          <th scope="col" class="px-6 py-3">Добавлен</th>
+          <th>Имя</th>
+          <th>E-mail</th>
+          <th>Статус</th>
+          <th>Роль</th>
+          <th>Добавлен</th>
           <% if current_user.roles&.first&.name == "admin" %>
-            <th scope="col" class="px-6 py-3">Действия</th>
+            <th>Действия</th>
           <% end %>
         </tr>
       </thead>
       <tbody>
         <% @users.each do |user| %>
-          <tr class="bg-white border-b">
-            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+          <tr>
+            <td class="font-medium text-gray-900">
               <%= user.name %>
-            </th>
-            <td class="px-6 py-4"><%= user.email %></td>
-            <td class="px-6 py-4">
+            </td>
+            <td><%= user.email %></td>
+            <td>
               <%= user.accepted_or_not_invited? ? "Активен" : "Приглашен" %>
             </td>
-            <td class="px-6 py-4">
+            <td>
               <%= user.roles&.first&.name&.capitalize %>
             </td>
-            <td class="px-6 py-4">
+            <td>
               <%= user.created_at.strftime('%d.%m.%Y') %>
             </td>
             <% if current_user.roles&.first&.name == "admin" %>
-              <td class="px-6 py-4 flex items-center gap-2">
+              <td class="flex items-center gap-2">
                 <%= link_to 'Управлять', edit_profile_user_path(user), class: 'text-blue-700 hover:text-white border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center' %>
                 <% unless user.id == current_user.id %>
                   <%= button_to 'Удалить', profile_user_path(user), 
                       method: :delete, 
                       form: { 
-                        data: { turbo_confirm: "Вы уверены, что хотите удалить эту модель?" }
+                        data: { turbo_confirm: "Вы уверены, что хотите удалить этого пользователя?" }
                       },
                       class: 'text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex',
                       form_class: 'inline-block' %>
