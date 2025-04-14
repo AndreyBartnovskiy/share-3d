@@ -15,7 +15,7 @@
 <div class="flex justify-center">
   <div class="p-2 w-full bg-white rounded-lg border border-gray-200 shadow-md sm:p-6 lg:p-8">
     <h5 class="p-2 text-xl leading-none text-gray-900">Редактировать профиль:</h5>
-    <%= form_with(model: @user, url: update_my_settings_path, id: 'edit_my_user', html: {class: 'space-y-6'}) do |f| %>
+    <%= form_with(model: @user, url: profile_update_settings_path, id: 'edit_my_user', html: {class: 'space-y-6'}) do |f| %>
       <% if @user.errors.any? %>
         <div class="text-red-700">
           <h4>

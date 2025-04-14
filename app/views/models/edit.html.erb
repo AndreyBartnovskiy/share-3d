@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Редактирование модели: <%= @model.name %></title>
+</head>
+<body>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Редактирование модели: <%= @model.name %></h1>
+
+    <%= render 'form', model: @model %>
+
+    <div class="mt-4">
+      <%= link_to "Назад к модели", user_model_path(@model.user, @model), class: "text-blue-600 hover:text-blue-800" %>
+    </div>
+  </div>
+</body>
+</html> 

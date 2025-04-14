@@ -50,7 +50,19 @@
 
 <body>
   <div class="model-container" data-controller="model-viewer">
-    <h2 class="model-title">Модель: <%= @model.name %></h2>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="model-title">Модель: <%= @model.name %></h2>
+      <div class="flex space-x-2">
+        <% if current_user.has_role?(:admin) || @model.user == current_user %>
+          <%= link_to "Редактировать", edit_user_model_path(@model.user, @model), class: "inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 focus:ring-4 focus:outline-none focus:ring-yellow-300" %>
+          <%= button_to "Удалить", user_model_path(@model.user, @model),
+            method: :delete,
+            form: { 
+              data: { turbo_confirm: "Вы уверены, что хотите удалить эту модель?" }
+            }, class: "inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300" %>
+        <% end %>
+      </div>
+    </div>
     <div class="model-description">
       <p>Описание: <%= @model.description %></p>
     </div>
@@ -60,7 +72,7 @@
         source="<%= rails_blob_url(@model.file) %>"
         camera-auto-orbit
         camera-auto-orbit-speed="0.080"
-      </babylon-viewer>
+      ></babylon-viewer>
     </div>
 
     <hr class="separator">
@@ -108,7 +120,7 @@
           data-model-url="<%= rails_blob_url(@model.file) %>"
           camera-auto-orbit
           camera-auto-orbit-speed="0.070"
-        </babylon-viewer>
+        ></babylon-viewer>
       </div>
 
       <div class="embed-settings">
@@ -147,7 +159,7 @@
           <textarea 
             id="embedCode" 
             readonly 
-            data-embed-url="<%= url_for(embed_model_path(@model)) %>"
+            data-embed-url="<%= url_for(embed_model_path(@model.user, @model)) %>"
             data-model-name="<%= @model.name %>"
           ></textarea>
           <button class="copy-button" id="copyEmbedCode">Скопировать</button>
