@@ -97,6 +97,10 @@ class UsersController < ApplicationController
     end
   end
 
+  def profile
+    @user = current_user
+  end
+
   private
 
   def set_users
