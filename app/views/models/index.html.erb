@@ -97,29 +97,36 @@
 </head>
 <body>
   <div class="gallery-container">
-    <h1>Галерея 3D моделей</h1>
-    <div class="model-grid">
+    <div class="gallery-header">
+      <h5 class="gallery-title">
+        <% if current_user.has_role?(:admin) %>
+          Управление моделями всех пользователей
+        <% else %>
+          Управление вашими моделями
+        <% end %>
+      </h5>
+      <div class="gallery-actions">
+        <%= link_to "Добавить модель", new_user_model_path(current_user), class: "add-model-button" %>
+      </div>
+    </div>
+
+    <div class="models-grid">
       <% @models.each do |model| %>
         <div class="model-card">
-          <a href="<%= user_model_path(model.user, model) %>">
-            <% if model.file.attached? %>
-              <div class="model-thumb">
-                <babylon-viewer source="<%= rails_blob_url(model.file) %>"</babylon-viewer>
-              </div>
-            <% else %>
-              <div class="no-preview">
-                Нет превью
-              </div>
-            <% end %>
-            <div class="model-info">
-              <h3><%= model.name %></h3>
-              <p><%= truncate(model.description, length: 100) %></p>
-              <div class="ids">
-                ID модели: <%= model.id %><br>
-                Пользователь: <%= model.user.name %>
-              </div>
+          <div class="model-preview">
+            <babylon-viewer
+              source="<%= rails_blob_url(model.file) %>"
+              camera-auto-orbit
+              camera-auto-orbit-speed="0.080"
+            ></babylon-viewer>
+          </div>
+          <div class="model-info">
+            <h3><%= model.name %></h3>
+            <p><%= truncate(model.description, length: 120) %></p>
+            <div class="model-actions">
+              <%= link_to "Просмотреть", user_model_path(current_user, model), class: "view-model-button" %>
             </div>
-          </a>
+          </div>
         </div>
       <% end %>
     </div>

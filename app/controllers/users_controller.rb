@@ -1,9 +1,15 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy ]
   before_action :set_users, only: [ :index ]
+  before_action :authenticate_user!
+  before_action :check_admin_access, only: [ :edit, :update, :destroy, :new, :create ]
   load_and_authorize_resource
 
   def index
+    @users = User.all
+  end
+
+  def show
   end
 
   def new
@@ -31,7 +37,7 @@ class UsersController < ApplicationController
       if @user.update(user_password_params)
         bypass_sign_in(@user)
 
-        format.html { redirect_to my_password_path, notice: "Password was successfully updated." }
+        format.html { redirect_to profile_password_path, notice: "Пароль успешно обновлен." }
       else
         format.html { render :password }
       end
@@ -43,7 +49,7 @@ class UsersController < ApplicationController
 
     respond_to do |format|
       if @user.update(user_params)
-        format.html { redirect_to my_settings_path, notice: "Your information was successfully updated." }
+        format.html { redirect_to profile_settings_path, notice: "Ваши данные успешно обновлены." }
       else
         format.html { render :me }
       end
@@ -79,7 +85,7 @@ class UsersController < ApplicationController
       if @user.update(user_params.except("role"))
         update_roles
 
-        format.html { redirect_to profile_users_path, notice: "User was successfully updated." }
+        format.html { redirect_to profile_users_path, notice: "Пользователь успешно обновлен." }
       else
         set_choices
 
@@ -92,15 +98,19 @@ class UsersController < ApplicationController
     @user.destroy
 
     respond_to do |format|
-      format.html { redirect_to profile_users_path, notice: "User was successfully destroyed." }
+      format.html { redirect_to profile_users_path, notice: "Пользователь успешно удален." }
       format.json { head :no_content }
     end
+  end
+
+  def profile
+    @user = current_user
   end
 
   private
 
   def set_users
-    @users = current_profile.users
+    @users = User.all
   end
 
   def set_user
@@ -121,8 +131,14 @@ class UsersController < ApplicationController
 
   def update_roles
     if @user.roles&.first&.name != user_params[:role]
-      @user.remove_role @user.roles&.first&.name.to_sym
+      @user.remove_role @user.roles&.first&.name.to_sym if @user.roles&.first&.name
       @user.add_role user_params[:role].to_sym, current_profile
+    end
+  end
+
+  def check_admin_access
+    unless current_user.roles&.first&.name == "admin"
+      redirect_to profile_users_path, alert: "У вас нет прав для выполнения этого действия."
     end
   end
 end

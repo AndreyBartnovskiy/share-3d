@@ -7,27 +7,36 @@ Rails.application.routes.draw do
   # get "users/update"
 
   devise_for :users, controllers: { registrations: "registrations" }
-  resource :profiles
 
-  get "user/me", to: "users#me", as: "my_settings"
-  patch "user/update_me", to: "users#update_me", as: "update_my_settings"
-  get "user/password", to: "users#password", as: "my_password"
-  patch "user/update_password", to: "users#update_password", as: "my_update_password"
+  # Маршруты для личного профиля
+  scope :profile, as: :profile do
+    get "/", to: "users#profile", as: "root" # Главная страница профиля
+    get "settings", to: "users#me", as: "settings" # Настройки профиля
+    patch "settings", to: "users#update_me", as: "update_settings"
+    get "password", to: "users#password", as: "password" # Изменение пароля
+    patch "password", to: "users#update_password", as: "update_password"
+
+    # Маршруты для управления пользователями (только для админов)
+    resources :users
+  end
 
   scope "profile", as: "profile" do
     resources :users
   end
 
-  resources :users do
+  # Общие маршруты для пользователей и моделей
+  resources :users, only: [ :index, :show ] do
     resources :models
   end
 
+  # Маршруты для моделей
   resources :models, only: [] do
     member do
       get :embed
     end
   end
 
+  # Маршруты для активности
   get "activity/mine"
   get "activity/feed"
 
