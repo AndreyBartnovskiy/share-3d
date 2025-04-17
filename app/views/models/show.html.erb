@@ -121,7 +121,10 @@
               <li><strong>Причина:</strong> <%= @uv_analysis["reason"] %></li>
             <% end %>
             <% if @uv_analysis["uv_exists"] %>
-              <li><strong>Эффективность использования UV-пространства:</strong> <%= @uv_analysis["uv_efficiency"].nil? ? "Нет данных" : ("#{(@uv_analysis["uv_efficiency"]*100).round(1)}%") %></li>
+              <li><strong>Эффективность использования UV-пространства:</strong> <%= @uv_analysis["uv_efficiency"].nil? ? "Нет данных" : ("#{@uv_analysis["uv_efficiency"].round(2)}%") %></li>
+              <% if @uv_analysis["uv_efficiency_explanation"].present? %>
+                <li class="uv-efficiency-explanation"><em><%= @uv_analysis["uv_efficiency_explanation"] %></em></li>
+              <% end %>
               <li><strong>Пересечение островов UV:</strong> <%= @uv_analysis["overlapping_islands"].nil? ? "Нет данных" : (@uv_analysis["overlapping_islands"] ? "Да" : "Нет") %></li>
               <li><strong>Деформация текстурных координат:</strong> <%= @uv_analysis["distortion"].nil? ? "Нет данных" : (@uv_analysis["distortion"] ? "Да" : "Нет") %></li>
             <% end %>
