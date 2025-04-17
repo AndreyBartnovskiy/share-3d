@@ -106,7 +106,34 @@
       <div id="analysisResults" class="analysis-results hidden"></div>
       <div id="advancedAnalysisResults" class="analysis-results hidden"></div>
       <div id="artifactAnalysisResults" class="analysis-results hidden"></div>
-    </div>    
+    </div>
+
+    <!-- UV-анализ -->
+    <div class="uv-analysis">
+      <h3>Анализ UV-развёртки</h3>
+      <% if @uv_analysis.present? %>
+        <% if @uv_analysis["error"] %>
+          <div class="uv-error">Ошибка анализа: <%= @uv_analysis["error"] %></div>
+        <% else %>
+          <ul class="uv-results">
+            <li><strong>Наличие UV-развёртки:</strong> <%= @uv_analysis["uv_exists"].nil? ? "Нет данных" : (@uv_analysis["uv_exists"] ? "Да" : "Нет") %></li>
+            <% if @uv_analysis["reason"] %>
+              <li><strong>Причина:</strong> <%= @uv_analysis["reason"] %></li>
+            <% end %>
+            <% if @uv_analysis["uv_exists"] %>
+              <li><strong>Эффективность использования UV-пространства:</strong> <%= @uv_analysis["uv_efficiency"].nil? ? "Нет данных" : ("#{(@uv_analysis["uv_efficiency"]*100).round(1)}%") %></li>
+              <li><strong>Пересечение островов UV:</strong> <%= @uv_analysis["overlapping_islands"].nil? ? "Нет данных" : (@uv_analysis["overlapping_islands"] ? "Да" : "Нет") %></li>
+              <li><strong>Деформация текстурных координат:</strong> <%= @uv_analysis["distortion"].nil? ? "Нет данных" : (@uv_analysis["distortion"] ? "Да" : "Нет") %></li>
+            <% end %>
+            <% if @uv_analysis["details"] %>
+              <li><strong>Детали:</strong> <%= @uv_analysis["details"] %></li>
+            <% end %>
+          </ul>
+        <% end %>
+      <% else %>
+        <div class="uv-info">UV-анализ не проводился.</div>
+      <% end %>
+    </div>
   </div>
 
   <!-- Overlay и модальное окно для Embed -->

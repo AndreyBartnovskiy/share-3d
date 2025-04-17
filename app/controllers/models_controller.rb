@@ -30,6 +30,15 @@ class ModelsController < ApplicationController
 
     if @model.nil?
       redirect_to user_models_path(@user), alert: "Модель не найдена!"
+      return
+    end
+
+    # Анализ UV-развёртки
+    begin
+      @uv_analysis = UvUnwrapAnalyzer.analyze(@model)
+      binding.pry
+    rescue => e
+      @uv_analysis = { error: "Ошибка анализа UV: #{e.message}" }
     end
   end
 
