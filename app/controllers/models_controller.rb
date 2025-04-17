@@ -36,7 +36,6 @@ class ModelsController < ApplicationController
     # Анализ UV-развёртки
     begin
       @uv_analysis = UvUnwrapAnalyzer.analyze(@model)
-      binding.pry
     rescue => e
       @uv_analysis = { error: "Ошибка анализа UV: #{e.message}" }
     end
