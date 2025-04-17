@@ -47,6 +47,7 @@
 
 <%= stylesheet_link_tag 'models', media: 'all' %>
 <%= stylesheet_link_tag 'model_analysis', media: 'all' %>
+<%= stylesheet_link_tag 'model_analysis_uv', media: 'all' %>
 
 <body>
   <div class="model-container" data-controller="model-viewer">
@@ -109,8 +110,17 @@
     </div>
 
     <!-- UV-анализ -->
-    <div class="uv-analysis">
-      <h3>Анализ UV-развёртки</h3>
+    <div class="uv-analysis stylish-uv-analysis">
+      <div class="uv-header">
+        <h3>Анализ UV-развёртки</h3>
+        <span class="info-icon" tabindex="0">ℹ️
+          <span class="info-tooltip">
+            <strong>Эффективность UV-развёртки</strong> показывает, насколько рационально используется текстурное пространство. Чем выше значение, тем меньше пустых областей и перекрытий, тем качественнее текстурирование модели.<br><br>
+            <b>100%:</b> всё UV-пространство используется идеально.<br>
+            <b>0%:</b> UV-развёртка отсутствует или крайне неэффективна.
+          </span>
+        </span>
+      </div>
       <% if @uv_analysis.present? %>
         <% if @uv_analysis["error"] %>
           <div class="uv-error">Ошибка анализа: <%= @uv_analysis["error"] %></div>
@@ -121,20 +131,51 @@
               <li><strong>Причина:</strong> <%= @uv_analysis["reason"] %></li>
             <% end %>
             <% if @uv_analysis["uv_exists"] %>
-              <li><strong>Эффективность использования UV-пространства:</strong> <%= @uv_analysis["uv_efficiency"].nil? ? "Нет данных" : ("#{@uv_analysis["uv_efficiency"].round(2)}%") %></li>
+              <li class="uv-efficiency-row">
+                <strong>Эффективность использования UV-пространства:</strong>
+                <% if @uv_analysis["uv_efficiency"].nil? %>
+                  <span class="uv-efficiency-value">Нет данных</span>
+                <% else %>
+                  <% uv = @uv_analysis["uv_efficiency"].to_f %>
+                  <% percent = uv.round(2) %>
+                  <span class="uv-efficiency-value"><%= percent %>%</span>
+                  <div class="uv-progress-bar-wrapper">
+                    <div class="uv-progress-bar <%= percent >= 75 ? 'good' : percent >= 40 ? 'medium' : 'bad' %>" style="width: <%= [percent, 100].min %>%"></div>
+                  </div>
+                <% end %>
+              </li>
               <% if @uv_analysis["uv_efficiency_explanation"].present? %>
                 <li class="uv-efficiency-explanation"><em><%= @uv_analysis["uv_efficiency_explanation"] %></em></li>
               <% end %>
               <li><strong>Пересечение островов UV:</strong> <%= @uv_analysis["overlapping_islands"].nil? ? "Нет данных" : (@uv_analysis["overlapping_islands"] ? "Да" : "Нет") %></li>
               <li><strong>Деформация текстурных координат:</strong> <%= @uv_analysis["distortion"].nil? ? "Нет данных" : (@uv_analysis["distortion"] ? "Да" : "Нет") %></li>
             <% end %>
-
           </ul>
         <% end %>
       <% else %>
         <div class="uv-info">UV-анализ не проводился.</div>
       <% end %>
     </div>
+    <script>
+      // Tooltip для info-icon
+      document.addEventListener('DOMContentLoaded', function() {
+        const infoIcon = document.querySelector('.uv-analysis .info-icon');
+        if (infoIcon) {
+          infoIcon.addEventListener('focus', function() {
+            infoIcon.querySelector('.info-tooltip').classList.add('visible');
+          });
+          infoIcon.addEventListener('blur', function() {
+            infoIcon.querySelector('.info-tooltip').classList.remove('visible');
+          });
+          infoIcon.addEventListener('mouseenter', function() {
+            infoIcon.querySelector('.info-tooltip').classList.add('visible');
+          });
+          infoIcon.addEventListener('mouseleave', function() {
+            infoIcon.querySelector('.info-tooltip').classList.remove('visible');
+          });
+        }
+      });
+    </script>
   </div>
 
   <!-- Overlay и модальное окно для Embed -->

@@ -15,3 +15,4 @@
 //= link models.css
 //= link controllers/model_viewer_controller.js
 //= link model_analysis.css
+//= link model_analysis_uv.css
