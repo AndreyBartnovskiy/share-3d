@@ -69,7 +69,7 @@ def analyze_uv(filepath):
                 # Ограничим область UV-карты 1x1
                 total_uv_area = min(total_uv_area, 1.0)
                 uv_efficiency = total_uv_area * 100  # В процентах
-                details = f"UV-развёртка обнаружена. Эффективность использования UV-пространства: {uv_efficiency:.2f}%."
+
                 if uv_efficiency < 30:
                     uv_efficiency_explanation = "Низкая эффективность: большая часть UV-карты не используется, текстура может быть размытой."
                 elif uv_efficiency < 70:
@@ -79,14 +79,13 @@ def analyze_uv(filepath):
                 overlapping_islands = None  # Не реализовано
                 distortion = None  # Не реализовано
             else:
-                details = "UV-развёртка отсутствует!"
+                pass
             return {
                 "uv_exists": uv_exist,
                 "uv_efficiency": uv_efficiency,
                 "uv_efficiency_explanation": uv_efficiency_explanation,
                 "overlapping_islands": overlapping_islands,
-                "distortion": distortion,
-                "details": details
+                "distortion": distortion
             }
     except Exception as e:
         return {"error": str(e)}

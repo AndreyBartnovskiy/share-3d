@@ -128,9 +128,7 @@
               <li><strong>Пересечение островов UV:</strong> <%= @uv_analysis["overlapping_islands"].nil? ? "Нет данных" : (@uv_analysis["overlapping_islands"] ? "Да" : "Нет") %></li>
               <li><strong>Деформация текстурных координат:</strong> <%= @uv_analysis["distortion"].nil? ? "Нет данных" : (@uv_analysis["distortion"] ? "Да" : "Нет") %></li>
             <% end %>
-            <% if @uv_analysis["details"] %>
-              <li><strong>Детали:</strong> <%= @uv_analysis["details"] %></li>
-            <% end %>
+
           </ul>
         <% end %>
       <% else %>
