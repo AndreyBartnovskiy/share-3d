@@ -33,6 +33,7 @@ Rails.application.routes.draw do
   resources :models, only: [] do
     member do
       get :embed
+      post :optimize
     end
   end
 

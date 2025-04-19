@@ -61,6 +61,11 @@
             form: { 
               data: { turbo_confirm: "Вы уверены, что хотите удалить эту модель?" }
             }, class: "inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300" %>
+          <%= form_with url: optimize_model_path(@model), method: :post, local: true, class: "inline-flex space-x-2" do |f| %>
+            <%= f.label :simplify_ratio, "Коэффициент упрощения (0.1 - 0.9)", class: "mr-2" %>
+            <%= f.number_field :simplify_ratio, value: 0.5, step: 0.1, min: 0.1, max: 0.9, class: "w-20 mr-2" %>
+            <%= f.submit "Оптимизировать модель", class: "inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300" %>
+          <% end %>
         <% end %>
       </div>
     </div>
@@ -81,26 +86,33 @@
     <div class="action-buttons">
       <% if @model.file.attached? %>
         <a class="download-link" href="<%= rails_blob_path(@model.file, disposition: 'attachment') %>">
-          📥 Скачать модель
+          Скачать модель
         </a>
       <% else %>
         <p>Файл модели не загружен</p>
       <% end %>
-      <button class="embed-button" id="openAdvancedEmbed">🔗 Embed</button>
+      <button class="embed-button" id="openAdvancedEmbed"> Embed</button>
     </div>
+
+    <% if @model.optimized_file.attached? %>
+      <div class="mt-4 p-4 bg-green-100 rounded">
+        <b>Оптимизированная версия:</b>
+        <%= link_to "Скачать оптимизированную модель", rails_blob_path(@model.optimized_file, disposition: "attachment"), class: "text-blue-700 underline" %>
+      </div>
+    <% end %>
 
     <div class="model-analysis">
       <h3>Анализ модели</h3>
       
       <div class="analysis-buttons">
         <button id="runBasicAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
-          <span class="button-icon">📊</span> Статистика полигональной сетки
+          Статистика полигональной сетки
         </button>
         <button id="runAdvancedAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
-          <span class="button-icon">⚡</span> Оценка корректности топологии
+          Оценка корректности топологии
         </button>
         <button id="runArtifactAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
-          <span class="button-icon">🔍</span> Поиск артефактов
+          Поиск артефактов
         </button>
       </div>
       
