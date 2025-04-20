@@ -23,6 +23,10 @@ class MeshOptimizer
       Dir.mktmpdir do |dir|
         output_path = File.join(dir, "optimized#{extension}")
         env = { 'DYLD_LIBRARY_PATH' => '/opt/homebrew/lib' } # для macOS, если нужен assimp
+        # Для .glb/.gltf явно указываем путь до Blender
+        if extension.in?(['.glb', '.gltf'])
+          env['BLENDER_PATH'] = '/Applications/Blender.app/Contents/MacOS/Blender'
+        end
         # Используем Open3D для оптимизации
         # ВАЖНО: использовать python из venv, где установлен open3d
         python_exec = ENV['OPEN3D_PYTHON'] || 'python3'
