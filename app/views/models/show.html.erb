@@ -86,12 +86,12 @@
     <div class="action-buttons">
       <% if @model.file.attached? %>
         <a class="download-link" href="<%= rails_blob_path(@model.file, disposition: 'attachment') %>">
-          Скачать модель
+          📥 Скачать модель
         </a>
       <% else %>
         <p>Файл модели не загружен</p>
       <% end %>
-      <button class="embed-button" id="openAdvancedEmbed"> Embed</button>
+      <button class="embed-button" id="openAdvancedEmbed">🔗 Embed</button>
     </div>
 
     <% if @model.optimized_file.attached? %>
@@ -106,13 +106,13 @@
       
       <div class="analysis-buttons">
         <button id="runBasicAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
-          Статистика полигональной сетки
+          <span class="button-icon">📊</span> Статистика полигональной сетки
         </button>
         <button id="runAdvancedAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
-          Оценка корректности топологии
+          <span class="button-icon">⚡</span> Оценка корректности топологии
         </button>
         <button id="runArtifactAnalysis" class="analysis-button" data-model-url="<%= rails_blob_url(@model.file) %>">
-          Поиск артефактов
+          <span class="button-icon">🔍</span> Поиск артефактов
         </button>
       </div>
       
