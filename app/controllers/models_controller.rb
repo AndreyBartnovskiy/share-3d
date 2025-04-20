@@ -77,6 +77,28 @@ class ModelsController < ApplicationController
     @model = Model.find(params[:id])
   end
 
+  def optimize
+    @model = Model.find(params[:id])
+    unless current_user.has_role?(:admin) || @model.user == current_user
+      redirect_to user_models_path(current_user), alert: "У вас нет прав для оптимизации этой модели"
+      return
+    end
+
+    simplify_ratio = params[:simplify_ratio].presence || 0.5
+    result = MeshOptimizer.optimize(@model, simplify_ratio.to_f)
+
+    if result['success'] && result['optimized_buffer'].present? && result['optimized_filename'].present?
+      @model.optimized_file.attach(io: result['optimized_buffer'], filename: result['optimized_filename'])
+      @model.save!
+      msg = "Модель успешно оптимизирована! Полигонов: #{result['original_faces']} → #{result['optimized_faces']}"
+      msg += "<br>Оптимизированная версия сохранена в формате .obj, так как исходный .glb не поддерживается для сохранения." if result['saved_as_obj']
+      redirect_to user_model_path(@model.user, @model), notice: msg.html_safe
+    else
+      error_msg = result['error'] || 'Неизвестная ошибка оптимизации.'
+      redirect_to user_model_path(@model.user, @model), alert: "Ошибка оптимизации: #{error_msg}"
+    end
+  end
+
   private
 
   def set_user
