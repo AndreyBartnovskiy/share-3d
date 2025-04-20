@@ -1,62 +1,76 @@
+import open3d as o3d
 import sys
 import os
 import json
 
-try:
-    import pymeshlab
-except ImportError:
-    print(json.dumps({'error': 'PyMeshLab не установлен'}))
-    sys.exit(1)
-
 def main():
-    if len(sys.argv) < 4:
-        print(json.dumps({'error': 'Недостаточно аргументов. Использование: python3 optimize_mesh.py <input_path> <output_path> <simplify_ratio>'}))
-        sys.exit(1)
-
-    input_path = sys.argv[1]
-    output_path = sys.argv[2]
-    input_ext = os.path.splitext(input_path)[1].lower()
     try:
-        simplify_ratio = float(sys.argv[3])
-        if not (0 < simplify_ratio < 1):
-            raise ValueError()
-    except ValueError:
-        print(json.dumps({'error': 'Коэффициент упрощения должен быть числом от 0 до 1 (например, 0.5)'}))
-        sys.exit(1)
-
-    if not os.path.exists(input_path):
-        print(json.dumps({'error': f'Файл {input_path} не найден'}))
-        sys.exit(1)
-
-    # Если формат .glb, сохраняем как .obj
-    save_as_obj = False
-    if input_ext == '.glb':
-        output_path = os.path.splitext(output_path)[0] + '.obj'
-        save_as_obj = True
-
-    try:
-        ms = pymeshlab.MeshSet()
-        ms.load_new_mesh(input_path)
-        mesh = ms.current_mesh()
-        orig_faces = mesh.face_number()
-        target_faces = int(orig_faces * simplify_ratio)
-        try:
-            ms.meshing_decimation_quadric_edge_collapse(targetfacenum=target_faces)
-        except AttributeError as e:
-            filters = dir(ms)
-            print(json.dumps({'error': f'Фильтр не найден: {str(e)}', 'available_filters': filters}))
+        if len(sys.argv) < 4:
+            print(json.dumps({'error': 'Недостаточно аргументов'}))
             sys.exit(1)
-        ms.save_current_mesh(output_path)
-        result = {
+
+        input_path = sys.argv[1]
+        output_path = sys.argv[2]
+        simplify_ratio = float(sys.argv[3])
+
+        mesh = o3d.io.read_triangle_mesh(input_path)
+        if mesh.is_empty():
+            print(json.dumps({'error': f'Не удалось загрузить mesh из файла: {input_path}'}))
+            sys.exit(1)
+
+        orig_faces = len(mesh.triangles)
+        target_faces = max(10, int(orig_faces * simplify_ratio))
+
+        mesh = mesh.simplify_quadric_decimation(target_faces)
+        mesh.remove_unreferenced_vertices()
+        mesh.remove_degenerate_triangles()
+        mesh.remove_duplicated_triangles()
+        mesh.remove_duplicated_vertices()
+        mesh.remove_non_manifold_edges()
+
+        ext = os.path.splitext(output_path)[1].lower()
+        write_ok = False
+        actual_output_path = output_path
+
+        if ext == '.obj':
+            write_ok = o3d.io.write_triangle_mesh(output_path, mesh, write_triangle_uvs=True)
+        elif ext == '.stl':
+            write_ok = o3d.io.write_triangle_mesh(output_path, mesh)
+        elif ext == '.glb' or ext == '.gltf':
+            # Сохраняем сначала как .obj, потом конвертируем в .glb через trimesh
+            temp_obj = os.path.splitext(output_path)[0] + '_tmp.obj'
+            write_ok = o3d.io.write_triangle_mesh(temp_obj, mesh, write_triangle_uvs=True)
+            if write_ok:
+                try:
+                    import trimesh
+                    tm = trimesh.load(temp_obj, force='mesh')
+                    tm.export(output_path)
+                    actual_output_path = output_path
+                    os.remove(temp_obj)
+                except Exception as e:
+                    print(json.dumps({'error': f'Ошибка при конвертации в .glb: {str(e)}'}))
+                    sys.exit(1)
+            else:
+                print(json.dumps({'error': f'Не удалось сохранить временный .obj для конвертации в .glb: {temp_obj}'}))
+                sys.exit(1)
+        else:
+            # По умолчанию сохраняем в .obj
+            actual_output_path = os.path.splitext(output_path)[0] + '.obj'
+            write_ok = o3d.io.write_triangle_mesh(actual_output_path, mesh, write_triangle_uvs=True)
+
+        if not write_ok:
+            print(json.dumps({'error': f'Не удалось сохранить mesh в файл: {actual_output_path}'}))
+            sys.exit(1)
+
+        print(json.dumps({
             'success': True,
             'original_faces': orig_faces,
-            'optimized_faces': ms.current_mesh().face_number(),
-            'output_path': output_path,
-            'saved_as_obj': save_as_obj
-        }
-        print(json.dumps(result))
+            'optimized_faces': len(mesh.triangles),
+            'output_path': actual_output_path
+        }))
     except Exception as e:
-        print(json.dumps({'error': str(e)}))
+        import traceback
+        print(json.dumps({'error': str(e), 'traceback': traceback.format_exc()}))
         sys.exit(1)
 
 if __name__ == '__main__':
