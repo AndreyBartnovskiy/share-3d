@@ -35,7 +35,6 @@ class MeshOptimizer
           python_exec, python_script_path, input_file.path, output_path, simplify_ratio.to_s
         ]
         stdout, stderr, status = Open3.capture3(env, *python_cmd)
-        binding.pry
 
         # Если скрипт завершился с ошибкой или stdout пустой — показать ошибку с деталями
         if !status.success? || stdout.blank?
