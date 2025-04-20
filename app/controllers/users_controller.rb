@@ -1,12 +1,28 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [ :show, :edit, :update, :destroy ]
-  before_action :set_users, only: [ :index ]
   before_action :authenticate_user!
-  before_action :check_admin_access, only: [ :edit, :update, :destroy, :new, :create ]
-  load_and_authorize_resource
+  load_and_authorize_resource except: [:me, :password, :update_password, :update_me, :profile, :index]
 
   def index
-    @users = User.all
+    if current_user.profile.nil?
+      redirect_to root_path, alert: "Для получения доступа к пользователям необходимо создать или присоединиться к профилю"
+      return
+    end
+    
+    if current_user.has_role?(:admin, current_user.profile)
+      # Администратор видит всех пользователей своего профиля
+      @users = User.where(profile: current_user.profile)
+    else
+      # Обычный пользователь видит только пользователей своего профиля, если он входит в группу
+      if current_user.has_role?(:user, current_user.profile)
+        @users = User.where(profile: current_user.profile)
+      else
+        redirect_to root_path, alert: "У вас нет доступа к списку пользователей"
+        return
+      end
+    end
+    
+    authorize! :read, User
   end
 
   def show
@@ -14,7 +30,6 @@ class UsersController < ApplicationController
 
   def new
     @user = User.new
-
     set_choices
   end
 
@@ -24,14 +39,17 @@ class UsersController < ApplicationController
 
   def me
     @user = current_user
+    authorize! :update, @user
   end
 
   def password
     @user = current_user
+    authorize! :update_password, @user
   end
 
   def update_password
     @user = current_user
+    authorize! :update_password, @user
 
     respond_to do |format|
       if @user.update(user_password_params)
@@ -46,6 +64,7 @@ class UsersController < ApplicationController
 
   def update_me
     @user = current_user
+    authorize! :update, @user
 
     respond_to do |format|
       if @user.update(user_params)
@@ -58,23 +77,23 @@ class UsersController < ApplicationController
 
   def create
     @user = User.unscoped.new(user_params.except("role"))
-
     @user.profile = current_profile
     @user.password = "password123"
+
+    authorize! :invite, @user
 
     respond_to do |format|
       begin
         if @user.valid? && @user.invite!(current_user)
           @user.add_role user_params[:role].to_sym, current_profile
 
-          format.html { redirect_to profile_users_path, notice: "User was successfully invited." }
+          format.html { redirect_to profile_users_path, notice: "Пользователь успешно приглашен." }
         else
           set_choices
-
           format.html { render :new }
         end
       rescue ActiveRecord::RecordNotUnique
-        flash[:alert] = "Email must be unique"
+        flash[:alert] = "Email должен быть уникальным"
         format.html { render :new }
       end
     end
@@ -88,7 +107,6 @@ class UsersController < ApplicationController
         format.html { redirect_to profile_users_path, notice: "Пользователь успешно обновлен." }
       else
         set_choices
-
         format.html { render :edit }
       end
     end
@@ -105,13 +123,10 @@ class UsersController < ApplicationController
 
   def profile
     @user = current_user
+    authorize! :read, @user
   end
 
   private
-
-  def set_users
-    @users = User.all
-  end
 
   def set_user
     @user = User.find(params[:id])
@@ -131,14 +146,12 @@ class UsersController < ApplicationController
 
   def update_roles
     if @user.roles&.first&.name != user_params[:role]
-      @user.remove_role @user.roles&.first&.name.to_sym if @user.roles&.first&.name
+      @user.remove_role @user.roles&.first&.name.to_sym, current_profile if @user.roles&.first&.name
       @user.add_role user_params[:role].to_sym, current_profile
     end
   end
 
-  def check_admin_access
-    unless current_user.roles&.first&.name == "admin"
-      redirect_to profile_users_path, alert: "У вас нет прав для выполнения этого действия."
-    end
+  def current_profile
+    @current_profile ||= current_user.profile
   end
 end
