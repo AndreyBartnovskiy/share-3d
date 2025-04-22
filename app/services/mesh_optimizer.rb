@@ -25,7 +25,8 @@ class MeshOptimizer
         env = { 'DYLD_LIBRARY_PATH' => '/opt/homebrew/lib' } # для macOS, если нужен assimp
         # Для .glb/.gltf явно указываем путь до Blender
         if extension.in?(['.glb', '.gltf'])
-          env['BLENDER_PATH'] = '/Applications/Blender.app/Contents/MacOS/Blender'
+          # Use BLENDER_PATH from ENV if provided; defaults to blender in PATH
+          env['BLENDER_PATH'] = ENV['BLENDER_PATH'] if ENV['BLENDER_PATH']
         end
         # Используем Open3D для оптимизации
         # ВАЖНО: использовать python из venv, где установлен open3d

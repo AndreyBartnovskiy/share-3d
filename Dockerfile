@@ -16,8 +16,15 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client python3 python3-venv python3-pip python3-dev python3-distutils libassimp-dev libopenblas-dev blender && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Setup Python venv for mesh optimization
+RUN python3 -m venv /opt/venv && \
+    /opt/venv/bin/pip install --upgrade pip && \
+    /opt/venv/bin/pip install numpy trimesh open3d pyassimp
+
+ENV PATH="/opt/venv/bin:$PATH" OPEN3D_PYTHON="/opt/venv/bin/python3"
 
 # Set production environment
 ENV RAILS_ENV="production" \
