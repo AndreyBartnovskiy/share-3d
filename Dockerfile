@@ -26,6 +26,9 @@ RUN python3 -m venv /opt/venv && \
 
 ENV PATH="/opt/venv/bin:$PATH" OPEN3D_PYTHON="/opt/venv/bin/python3"
 
+# Install Foreman for process management in development
+RUN gem install foreman --no-document
+
 # Set production environment
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
