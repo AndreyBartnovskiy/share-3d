@@ -16,7 +16,7 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client python3 python3-venv python3-pip python3-dev python3-distutils libassimp-dev libopenblas-dev blender && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client python3 python3-venv python3-pip python3-dev python3-distutils python3-numpy libassimp-dev libopenblas-dev blender && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Setup Python venv for mesh optimization

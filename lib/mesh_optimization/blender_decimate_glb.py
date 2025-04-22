@@ -1,6 +1,15 @@
 import bpy
 import sys
 import os
+import glob
+
+# Allow Blender's Python to import numpy from our venv
+for sp in glob.glob('/opt/venv/lib/python*/site-packages'):
+    if os.path.isdir(sp):
+        sys.path.insert(0, sp)
+import numpy as np
+if not hasattr(np, 'bool'):
+    np.bool = bool
 
 # Получаем аргументы после --
 argv = sys.argv
