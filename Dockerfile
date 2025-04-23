@@ -22,7 +22,7 @@ RUN apt-get update -qq && \
 # Setup Python venv for mesh optimization
 RUN python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --upgrade pip && \
-    /opt/venv/bin/pip install numpy trimesh open3d pyassimp
+    /opt/venv/bin/pip install --default-timeout=120 numpy trimesh open3d pyassimp
 
 ENV PATH="/opt/venv/bin:$PATH" OPEN3D_PYTHON="/opt/venv/bin/python3"
 
@@ -33,7 +33,7 @@ RUN gem install foreman --no-document
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+    BUNDLE_WITHOUT=""
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build
