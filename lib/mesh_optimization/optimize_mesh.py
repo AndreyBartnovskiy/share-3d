@@ -22,8 +22,22 @@ def main():
                 blender_path, '--background', '--python', blender_script, '--', input_path, output_path, str(simplify_ratio)
             ]
             proc = subprocess.run(cmd, capture_output=True, text=True)
+            # Debug: Blender execution info (to stderr)
+            sys.stderr.write(json.dumps({'debug_blender_stdout': proc.stdout, 'debug_blender_stderr': proc.stderr, 'debug_exitcode': proc.returncode}) + "\n")
+            sys.stderr.flush()
             if proc.returncode != 0:
                 print(json.dumps({'error': 'Blender decimation failed', 'stdout': proc.stdout, 'stderr': proc.stderr}))
+                sys.exit(1)
+            # Debug: verify output file creation in directory
+            out_dir = os.path.dirname(output_path)
+            try:
+                files = os.listdir(out_dir)
+            except Exception as e:
+                files = [f"Error listing directory: {e}"]
+            sys.stderr.write(json.dumps({'debug_listdir': out_dir, 'files': files}) + "\n")
+            sys.stderr.flush()
+            if not os.path.exists(output_path):
+                print(json.dumps({'error': 'Output file not created', 'output_path': output_path, 'files': files}))
                 sys.exit(1)
             # Подсчитаем полигоны после оптимизации (через trimesh)
             try:
@@ -31,6 +45,11 @@ def main():
                 mesh = trimesh.load(output_path, force='scene')
                 orig_faces = sum(len(g.faces) for g in mesh.geometry.values()) if hasattr(mesh, 'geometry') else len(mesh.faces)
                 optimized_faces = orig_faces
+                # Явно синхронизируем запись файла
+                if os.path.exists(output_path):
+                    with open(output_path, 'rb+') as f:
+                        f.flush()
+                        os.fsync(f.fileno())
                 print(json.dumps({
                     'success': True,
                     'optimized_faces': optimized_faces,

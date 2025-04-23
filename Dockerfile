@@ -16,14 +16,24 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client python3 python3-venv python3-pip python3-dev python3-distutils python3-numpy libassimp-dev libopenblas-dev blender && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Setup Python venv for mesh optimization
+RUN python3 -m venv /opt/venv && \
+    /opt/venv/bin/pip install --upgrade pip && \
+    /opt/venv/bin/pip install --default-timeout=120 numpy trimesh open3d pyassimp
+
+ENV PATH="/opt/venv/bin:$PATH" OPEN3D_PYTHON="/opt/venv/bin/python3"
+
+# Install Foreman for process management in development
+RUN gem install foreman --no-document
 
 # Set production environment
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+    BUNDLE_WITHOUT=""
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build

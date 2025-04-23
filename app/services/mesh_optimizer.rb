@@ -20,15 +20,27 @@ class MeshOptimizer
     result = nil
     model.file.blob.open do |input_file|
       # Временный файл для результата
-      Dir.mktmpdir do |dir|
+      dir = Dir.mktmpdir
+      begin
         output_path = File.join(dir, "optimized#{extension}")
         env = { 'DYLD_LIBRARY_PATH' => '/opt/homebrew/lib' } # для macOS, если нужен assimp
-        # Для .glb/.gltf явно указываем путь до Blender
-        if extension.in?(['.glb', '.gltf'])
-          env['BLENDER_PATH'] = '/Applications/Blender.app/Contents/MacOS/Blender'
+
+        # Универсально определяем путь к Blender
+        blender_path = ENV['BLENDER_PATH']
+        if blender_path.nil? || blender_path.empty?
+          case RUBY_PLATFORM
+          when /darwin/
+            blender_path = '/Applications/Blender.app/Contents/MacOS/Blender'
+          when /linux/
+            blender_path = '/usr/bin/blender'
+          else
+            blender_path = 'blender' # fallback: в PATH
+          end
         end
+        env['BLENDER_PATH'] = blender_path
+        Rails.logger.info "[MeshOptimizer] Используется BLENDER_PATH: #{blender_path}"
+
         # Используем Open3D для оптимизации
-        # ВАЖНО: использовать python из venv, где установлен open3d
         python_exec = ENV['OPEN3D_PYTHON'] || 'python3'
         python_script_path = Rails.root.join('lib', 'mesh_optimization', 'optimize_mesh.py').to_s
         python_cmd = [
@@ -36,7 +48,10 @@ class MeshOptimizer
         ]
         stdout, stderr, status = Open3.capture3(env, *python_cmd)
 
-        # Если скрипт завершился с ошибкой или stdout пустой — показать ошибку с деталями
+        Rails.logger.error "[MeshOptimizer] STDOUT: #{stdout}"
+        Rails.logger.error "[MeshOptimizer] STDERR: #{stderr}"
+        Rails.logger.error "[MeshOptimizer] EXIT STATUS: #{status.exitstatus}"
+
         if !status.success? || stdout.blank?
           result = {
             error: 'Ошибка оптимизации: скрипт завершился с ошибкой или не вернул результат.',
@@ -45,16 +60,19 @@ class MeshOptimizer
             stderr: stderr
           }
         else
-          # Open3D может писать предупреждения в stdout до JSON — ищем JSON-результат в конце
           json_match = stdout.match(/\{.*\}\s*$/m)
           if json_match
             begin
               result = JSON.parse(json_match[0])
               if result['success'] && result['output_path'] && File.exist?(result['output_path'])
+                file_size = File.size(result['output_path'])
+                Rails.logger.info "[MeshOptimizer] Optimized file exists: #{result['output_path']}, size: #{file_size} bytes"
                 buffer = StringIO.new(File.binread(result['output_path']))
                 optimized_filename = "optimized_#{model.file.filename.base}#{extension}"
                 result['optimized_buffer'] = buffer
                 result['optimized_filename'] = optimized_filename
+              else
+                Rails.logger.error "[MeshOptimizer] Optimized file missing or not created: #{result['output_path']}"
               end
             rescue JSON::ParserError
               result = { error: 'Ошибка парсинга результата оптимизации.', raw: stdout }
@@ -63,6 +81,9 @@ class MeshOptimizer
             result = { error: 'Ошибка оптимизации: не найден JSON-результат в выводе.', raw: stdout }
           end
         end
+      ensure
+        # Не удаляем временную директорию сразу, чтобы избежать гонки
+        # FileUtils.remove_entry(dir) # Можно раскомментировать для ручной очистки
       end
     end
     result

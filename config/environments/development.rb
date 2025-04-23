@@ -1,3 +1,4 @@
+require "letter_opener_web"
 require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
@@ -38,7 +39,8 @@ Rails.application.configure do
   config.action_mailer.perform_caching = false
 
   # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.delivery_method = :letter_opener
+  # ЛОКАЛЬНАЯ РАБОТА: config.action_mailer.delivery_method = :letter_opener
+  config.action_mailer.delivery_method = :letter_opener_web
   config.action_mailer.asset_host = "http://localhost:#{ENV['PORT'] || 3000}"
   config.action_mailer.default_url_options = {
     host: "http://localhost:#{ENV['PORT'] || 3000}"

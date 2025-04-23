@@ -71,6 +71,7 @@ gem "slack-notifier"
 group :development do
   gem "web-console"
   gem "letter_opener"
+  gem "letter_opener_web"
   gem "foreman"
 
   # gem "rack-mini-profiler"
