@@ -79,4 +79,4 @@ end
 
 gem "rack-cors", require: "rack/cors"
 
-gem "tailwindcss-rails", "~> 4.2"
+gem "tailwindcss-rails", "~> 4.4"
